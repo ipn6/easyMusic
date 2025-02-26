@@ -1,0 +1,67 @@
+<nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+    <div class="container-fluid">
+        <a class="navbar-brand d-flex align-items-center p-0" routerLink="/">
+            <img src="/assets/logo.png" alt="logo"  class="app-logo" >
+        </a>
+      <a class="navbar-brand" href="/">EasyMusic</a>
+
+      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+
+      <div class="collapse navbar-collapse" id="navbarNav">
+        <ul class="navbar-nav ml-auto">
+            <!-- Usuario sin registrar-->
+          <li *ngIf="!user" class="nav-item">
+            <a class="nav-link" routerLink="/">Inicio</a>
+          </li>
+          <li *ngIf="!user" class="nav-item">
+            <a class="nav-link" routerLink="/login">Login</a>
+          </li>
+          <li *ngIf="!user" class="nav-item">
+            <a class="nav-link" routerLink="/register">Registro</a>
+          </li>
+
+          <!-- Usuario registrado-->
+
+          <li *ngIf="user" class="nav-item">
+            <a class="nav-link" routerLink="/charangas">Charangas</a>
+          </li>
+
+          <!-- Usuario cliente-->
+          <li *ngIf="rol === 'cliente'" class="nav-item">
+            <a class="nav-link" routerLink="/ofertas">Ofertas</a>
+          </li>
+
+          <!-- Usuario charanga-->
+          <li *ngIf="rol === 'charanga'" class="nav-item">
+            <a class="nav-link" routerLink="/ofertas">Ofertas</a>
+          </li>
+          <li *ngIf="rol === 'charanga'" class="nav-item">
+            <a class="nav-link" routerLink="/actos">Actos</a>
+          </li>
+          <li *ngIf="rol === 'charanga'" class="nav-item">
+            <a class="nav-link" routerLink="/musicos">Musicos</a>
+          </li>
+
+          <!-- Usuario músico-->
+          <li *ngIf="rol === 'music'" class="nav-item">
+            <a class="nav-link" routerLink="/actos">Actos</a>
+          </li>
+          <li *ngIf="rol === 'musico'" class="nav-item">
+            <a class="nav-link" routerLink="/musicos">Musicos</a>
+          </li>
+
+
+
+          <li *ngIf="user" class="nav-item">
+            <a class="nav-link" routerLink="/perfil">Perfil</a>
+          </li>
+            <li *ngIf="user" class="nav-item">
+                <a class="nav-link"(click)="logout()">Cerrar Sesión</a>
+            </li>
+        </ul>
+      </div>
+    </div>
+  </nav>
+  

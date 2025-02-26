@@ -1,0 +1,18 @@
+<div class="container mt-5">
+    <h2>Registro</h2>
+    <form (submit)="onSubmit()">
+      <input type="text" class="form-control" placeholder="Nombre" [(ngModel)]="user.name" name="name" required>
+      <input type="email" class="form-control mt-2" placeholder="Email" [(ngModel)]="user.email" name="email" required>
+      <input type="password" class="form-control mt-2" placeholder="Contraseña" [(ngModel)]="user.password" name="password" required>
+      <input type="password" class="form-control mt-2" placeholder="Confirmar contraseña" [(ngModel)]="user.confirmPassword" name="confirmPassword" required>
+      <input type="telefono" class="form-control mt-2" placeholder="Telefono" [(ngModel)]="user.telefono" name="telefono" required>
+      <label for="rol">Rol:</label>
+        <select id="rol" [(ngModel)]="user.rol" name="rol" required>
+            <option value="musico">Músico</option>
+            <option value="charanga">Charanga</option>
+            <option value="cliente">Cliente</option>
+        </select>
+      <button class="btn btn-primary mt-3">Registrarse</button>
+    </form>
+  </div>
+  

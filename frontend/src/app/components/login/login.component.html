@@ -1,0 +1,8 @@
+<div class="container mt-5">
+    <h2>Login</h2>
+    <form (submit)="onSubmit()">
+      <input type="email" class="form-control" placeholder="Email" [(ngModel)]="credentials.email" name="email" required>
+      <input type="password" class="form-control mt-2" placeholder="Contraseña" [(ngModel)]="credentials.password" name="password" required>
+      <button class="btn btn-primary mt-3">Ingresar</button>
+    </form>
+  </div>
