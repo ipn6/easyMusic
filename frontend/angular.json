@@ -29,6 +29,7 @@
             "polyfills": [
               "zone.js"
             ],
+            "outputHashing": "none", 
             "tsConfig": "tsconfig.app.json",
             "assets": [
               {
