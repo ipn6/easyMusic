@@ -1,6 +1,6 @@
 require("dotenv").config();
 const express = require("express");
-const mysql = require("mysql2");
+const mysql = require("mysql2/promise");
 const cors = require("cors");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
@@ -10,40 +10,65 @@ app.use(express.json());
 app.use(cors());
 
 // Configurar conexión a MySQL
-const db = mysql.createConnection({
+const db = mysql.createPool({
     host: "localhost",
     user: "root",
     password: "root", 
     database: "easymusic",
+    waitForConnections: true,
+    connectionLimit: 10,
+    queueLimit: 0
 });
 
-db.connect(err => {
-    if (err) throw err;
-    console.log("Conectado a MySQL");
-});
+async function testDB() {
+    try {
+        const [rows] = await db.query("SELECT 1");
+        console.log("Conexión a la base de datos exitosa",);
+    } catch (error) {
+        console.error("Error en la conexión a la base de datos:", error);
+    }
+}
 
-// Registro de usuario
+testDB();
+
 app.post("/register", async (req, res) => {
-    const { name, email, password, confirmPassword, telefono, rol} = req.body;
+    const { nombre, email, password, confirmPassword, telefono, rol, idProvincia, idInstrumento, nivelMusical, coche, fundacion } = req.body;
 
-    // Verificar que las contraseñas coincidan
     if (password !== confirmPassword) {
         return res.status(400).json({ error: "Las contraseñas no coinciden" });
     }
-    // Encriptar la contraseña
-    const hashedPassword = await bcrypt.hash(password, 10);
 
-    const sql = "INSERT INTO usuarios (name, email, password, telefono, rol) VALUES (?, ?, ?, ?, ?)";
-    db.query(sql, [name, email, hashedPassword, telefono, rol], (err, result) => {
-        if (err) return res.status(500).json({ error: err.message });
+    try {
+        const hashedPassword = await bcrypt.hash(password, 10);
+        const connection = await db.getConnection(); // Obtener una conexión del pool
 
-        // Obtener el ID del usuario recién creado
+        await connection.beginTransaction();
+
+        // Insertar usuario
+        const sqlUsuario = "INSERT INTO usuarios (email, password, nombre, rol, telefono, idProvincia) VALUES (?, ?, ?, ?, ?, ?)";
+        const [result] = await connection.query(sqlUsuario, [email, hashedPassword, nombre, rol, telefono, idProvincia]);
+
         const userId = result.insertId;
 
-        // Crear un objeto con los datos del usuario
-        const user = { id: userId, name, email, telefono, rol };
+        // Insertar en clientes, musicos o charangas
+        if(rol === "cliente") {
+            const sql2 = "INSERT INTO clientes (idCliente) VALUES (?)";
+            await connection.query(sql2, [userId]);
+        }else if(rol === "musico") {
+            const sql2 = "INSERT INTO musicos (idMusico, idInstrumento, nivelMusical, coche) VALUES (?, ?, ?, ?)";
+            await connection.query(sql2, [userId, idInstrumento, nivelMusical, coche]);
+        }
+        else{
+            const sql2 = "INSERT INTO charangas (idCharanga, fundacion) VALUES (?, ?)";
+            await connection.query(sql2, [userId, fundacion]);
+        }
 
-        // Generar token JWT
+        
+
+        await connection.commit();
+        connection.release(); // Liberar conexión
+
+        const user = { id: userId, nombre, email, telefono, rol, idProvincia };
         const token = jwt.sign({ id: userId }, "secretkey", { expiresIn: "1h" });
 
         res.json({
@@ -51,7 +76,11 @@ app.post("/register", async (req, res) => {
             token,
             user
         });
-    });
+
+    } catch (error) {
+        console.error("Error al registrar usuario:", error);
+        res.status(500).json({ error: "Error en el registro del usuario" });
+    }
 });
 
 // Inicio de sesión

@@ -8,12 +8,16 @@ import { AuthService } from '../../services/auth.service';
 })
 export class PerfilComponent implements OnInit {
   user: any = {};
+  provincia: any = {};
+  musico: any = {};
+  charanga: any = {};
 
   constructor(private authService: AuthService) {}
 
   ngOnInit() {
     this.loadUser();
   }
+  
 
   loadUser() {
     this.user = this.authService.getUser();

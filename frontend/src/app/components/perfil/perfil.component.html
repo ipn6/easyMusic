@@ -8,6 +8,20 @@
         <p><strong>Email:</strong> {{ user.email }}</p>
         <p><strong>Teléfono:</strong> {{ user.telefono }}</p>
         <p><strong>Rol:</strong> {{ user.rol }}</p>
+        <p><strong>Provincia:</strong> {{ user.provincia }}</p>
+        
+        <!-- Si el rol es musico-->
+        <div *ngIf="user.rol === 'musico'">
+          <p><strong>Instrumento:</strong> {{ user.instrumento }}</p>
+          <p><strong>Nivel musical:</strong> {{ user.nivelMusical }}</p>
+          <p><strong>Coche:</strong> {{ user.coche ? 'Sí' : 'No' }}</p>
+        </div>
+
+        <!-- Si el rol es charanga-->
+        <div *ngIf="user.rol === 'charanga'">
+          <p><strong>Año de fundación:</strong> {{ user.fundacion }}</p>
+        </div>
+        
         <button class="btn btn-primary">Editar Perfil</button>
       </div>
     </div>

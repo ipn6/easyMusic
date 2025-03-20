@@ -20,7 +20,7 @@ export class AuthService {
         if (response.token && response.user) {
           localStorage.setItem("token", response.token);
           localStorage.setItem("user", JSON.stringify(response.user));
-          this.userSubject.next(response.user); // ✅ Actualizar usuario
+          this.userSubject.next(response.user); //  Actualizar usuario
         }
       })
     );
@@ -33,7 +33,7 @@ export class AuthService {
         if (response.token && response.user) {
           localStorage.setItem("token", response.token);
           localStorage.setItem("user", JSON.stringify(response.user));
-          this.userSubject.next(response.user); // ✅ Actualizar usuario
+          this.userSubject.next(response.user); //  Actualizar usuario
         }
       })
     );

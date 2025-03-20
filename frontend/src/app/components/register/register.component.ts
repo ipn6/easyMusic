@@ -7,7 +7,9 @@ import { Router } from '@angular/router';
   templateUrl: './register.component.html',
 })
 export class RegisterComponent {
-  user = { name: '', email: '', password: '', confirmPassword: '', telefono: '', rol: 'cliente' };
+  user = { nombre: '', email: '', password: '', confirmPassword: '', telefono: '', rol: 'cliente', idProvincia: '',
+    idInstrumento: '', nivelMusical: '', coche: '0', fundacion: ''
+   };
 
   constructor(private authService: AuthService, private router: Router) {}
 
