@@ -8,7 +8,7 @@
         <p><strong>Email:</strong> {{ user.email }}</p>
         <p><strong>Teléfono:</strong> {{ user.telefono }}</p>
         <p><strong>Rol:</strong> {{ user.rol }}</p>
-        <p><strong>Provincia:</strong> {{ user.provincia }}</p>
+        <p><strong>Provincia:</strong> {{ user.nombreProvincia }}</p>
         
         <!-- Si el rol es musico-->
         <div *ngIf="user.rol === 'musico'">

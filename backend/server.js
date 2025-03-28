@@ -9,16 +9,23 @@ const app = express();
 app.use(express.json());
 app.use(cors());
 
+
 // Configurar conexión a MySQL
 const db = mysql.createPool({
-    host: "localhost",
-    user: "root",
-    password: "root", 
+    host: "easymusicserver.mysql.database.azure.com",
+    user: "ismaponce7",
+    password: "easymusic_7", 
     database: "easymusic",
+    port: 3306,                                  
+    ssl: {
+        rejectUnauthorized: true 
+    },
     waitForConnections: true,
     connectionLimit: 10,
     queueLimit: 0
 });
+
+
 
 async function testDB() {
     try {
@@ -84,25 +91,39 @@ app.post("/register", async (req, res) => {
 });
 
 // Inicio de sesión
-app.post("/login", (req, res) => {
+app.post("/login", async (req, res) => {
     const { email, password } = req.body;
+
     const sql = "SELECT * FROM usuarios WHERE email = ?";
-    
-    db.query(sql, [email], async (err, results) => {
-        if (err) return res.status(500).json({ error: err.message });
-        if (results.length === 0) return res.status(400).json({ error: "Usuario no encontrado" });
+
+    try {
+        // Ejecutar la consulta con await
+        const [results] = await db.query(sql, [email]);
+
+        if (results.length === 0) {
+            return res.status(400).json({ error: "Usuario no encontrado" });
+        }
 
         const user = results[0];
 
         // Verificar contraseña
         const isMatch = await bcrypt.compare(password, user.password);
-        if (!isMatch) return res.status(400).json({ error: "Contraseña incorrecta" });
+        if (!isMatch) {
+            return res.status(400).json({ error: "Contraseña incorrecta" });
+        }
 
         // Generar token JWT
         const token = jwt.sign({ id: user.id }, "secretkey", { expiresIn: "1h" });
         res.json({ message: "Inicio de sesión exitoso", token, user });
-    });
+
+    } catch (error) {
+        console.error("Error al iniciar sesion con el usuario:", error);
+        res.status(500).json({ error: "Error en el servidor" });
+    }
 });
+
+
+
 
 // Iniciar el servidor
 app.listen(3000, () => console.log("Servidor corriendo en http://localhost:3000"));
