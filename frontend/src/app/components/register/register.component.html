@@ -6,7 +6,24 @@
       <input type="password" class="form-control mt-2" placeholder="Contraseña" [(ngModel)]="user.password" name="password" required>
       <input type="password" class="form-control mt-2" placeholder="Confirmar contraseña" [(ngModel)]="user.confirmPassword" name="confirmPassword" required>
       <input type="number" class="form-control mt-2" placeholder="Telefono" [(ngModel)]="user.telefono" name="telefono" required>
-      <input type="number" class="form-control mt-2" placeholder="Provincia" [(ngModel)]="user.idProvincia" name="idProvincia" required>
+      <br>
+      <label for="provincia">Provincia:</label>
+      <input
+        type="text"
+        id="provincia"
+        [(ngModel)]="inputProvincia"
+        (input)="filtrarProvincias()"
+        placeholder="Escribe para buscar..."
+        list="listaProvincias"
+        name="provincia"
+      >
+      
+      <datalist id="listaProvincias">
+        <option *ngFor="let provincia of provinciasFiltradas" [value]="provincia.nombre" (click)="seleccionarProvincia(provincia)"></option>
+      </datalist>
+    
+      <input type="hidden" [(ngModel)]="user.idProvincia" name="idProvincia">
+      <br>
       <label for="rol">Rol:</label>
         <select id="rol" [(ngModel)]="user.rol" name="rol" required>
             <option value="musico">Músico</option>

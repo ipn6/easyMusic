@@ -66,6 +66,7 @@ app.post("/register", async (req, res) => {
             await connection.query(sql2, [userId, idInstrumento, nivelMusical, coche]);
         }
         else{
+
             const sql2 = "INSERT INTO charangas (idCharanga, fundacion) VALUES (?, ?)";
             await connection.query(sql2, [userId, fundacion]);
         }
@@ -74,14 +75,21 @@ app.post("/register", async (req, res) => {
 
         await connection.commit();
         connection.release(); // Liberar conexión
+        let user = {};
+        if(rol === "musico") {
+            user = { id: userId, nombre, email, telefono, rol, idProvincia, idMusico: userId, idInstrumento, nivelMusical, coche};
+        }else if(rol === "charanga") {
+            user = { id: userId, nombre, email, telefono, rol, idProvincia, idCharanga: userId, fundacion };
+        }else{
+            user = { id: userId, nombre, email, telefono, rol, idProvincia, idCliente: userId };
+        }
 
-        const user = { id: userId, nombre, email, telefono, rol, idProvincia };
         const token = jwt.sign({ id: userId }, "secretkey", { expiresIn: "1h" });
 
         res.json({
             message: "Usuario registrado con éxito",
             token,
-            user
+            user,
         });
 
     } catch (error) {
@@ -91,6 +99,8 @@ app.post("/register", async (req, res) => {
 });
 
 // Inicio de sesión
+//Cambiar login para que envie tambien el rol con los parametros
+//
 app.post("/login", async (req, res) => {
     const { email, password } = req.body;
 
@@ -121,6 +131,17 @@ app.post("/login", async (req, res) => {
         res.status(500).json({ error: "Error en el servidor" });
     }
 });
+
+app.get("/provincias", async (req, res) => {
+    try {
+        const [rows] = await db.query("SELECT idProvincia, nombre FROM provincia");
+        res.json(rows);  // Enviar el ID y el nombre de cada provincia
+    } catch (error) {
+        console.error("Error al obtener provincias:", error);
+        res.status(500).json({ error: "Error al obtener provincias" });
+    }
+});
+
 
 
 
