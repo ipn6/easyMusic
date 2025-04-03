@@ -9,20 +9,10 @@ const fs = require('fs');
 const path = require('path');
 const app = express();
 app.use(express.json());
-const allowedOrigins = [
-  'https://victorious-stone-011abec10.6.azurestaticapps.net',
-  'http://localhost:4200' // Para desarrollo local
-];
-
 app.use(cors({
-  origin: function (origin, callback) {
-    if (!origin || allowedOrigins.includes(origin)) {
-      callback(null, true);
-    } else {
-      callback(new Error('Not allowed by CORS'));
-    }
-  },
-  credentials: true
+  origin: 'https://victorious-stone-011abec10.6.azurestaticapps.net', // Permite solo este origen
+  methods: 'GET,POST,PUT,DELETE',
+  allowedHeaders: 'Content-Type,Authorization'
 }));
 const sharp = require('sharp');
 
@@ -477,4 +467,5 @@ app.post("/crear_anuncio_charanga", async (req, res) => {
 
 
 // Iniciar el servidor
-app.listen(3000, () => console.log("Servidor corriendo en http://localhost:3000"));
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => console.log(`Servidor corriendo en http://localhost:${PORT}`));
