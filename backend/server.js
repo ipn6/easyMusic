@@ -9,10 +9,20 @@ const fs = require('fs');
 const path = require('path');
 const app = express();
 app.use(express.json());
+const allowedOrigins = [
+  'https://victorious-stone-011abec10.6.azurestaticapps.net',
+  'http://localhost:4200' // Para desarrollo local
+];
+
 app.use(cors({
-  origin: 'https://victorious-stone-011abec10.6.azurestaticapps.net', // Permite solo este origen
-  methods: 'GET,POST,PUT,DELETE',
-  allowedHeaders: 'Content-Type,Authorization'
+  origin: function (origin, callback) {
+    if (!origin || allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
+  credentials: true
 }));
 const sharp = require('sharp');
 
