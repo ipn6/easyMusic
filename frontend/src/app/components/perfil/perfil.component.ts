@@ -49,7 +49,7 @@ export class PerfilComponent implements OnInit {
     this.getProvincia(this.user.idProvincia);
   }
   cargarFotoPerfil() {
-    this.http.get(`${this.apiUrl}/perfil/foto`, {
+    this.http.get(`${this.apiUrl}/fotoperfil`, {
       headers: new HttpHeaders({ 'user-id': this.user.idUsuario }),
       responseType: 'arraybuffer'
     }).subscribe(response => {

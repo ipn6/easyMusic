@@ -89,13 +89,13 @@ app.post("/register", async (req, res) => {
         let biografia = '';
 
         if(rol === "musico") {
-            user = { id: userId, nombre, email, telefono, rol, idProvincia, foto, valoracionMedia, biografia, 
+            user = { idUsuario: userId, nombre, email, telefono, rol, idProvincia, foto, valoracionMedia, biografia, 
                 idMusico: userId, idInstrumento, nivelMusical, coche};
         }else if(rol === "charanga") {
-            user = { id: userId, nombre, email, telefono, rol, idProvincia, foto, valoracionMedia, biografia,
+            user = { idUsuario: userId, nombre, email, telefono, rol, idProvincia, foto, valoracionMedia, biografia,
                 idCharanga: userId, fundacion };
         }else{
-            user = { id: userId, nombre, email, telefono, rol, idProvincia, foto, valoracionMedia, biografia, idCliente: userId };
+            user = { idUsuario: userId, nombre, email, telefono, rol, idProvincia, foto, valoracionMedia, biografia, idCliente: userId };
         }
 
         const token = jwt.sign({ id: userId }, "secretkey", { expiresIn: "1h" });
@@ -250,7 +250,7 @@ app.post('/perfil', upload.single('foto'), async (req, res) => {
   });
   
   // Ruta para obtener la foto del usuario autenticado
-  app.get('/perfil/foto', async (req, res) => {
+  app.get('/fotoperfil', async (req, res) => {
     const userId = req.headers['user-id'];
 
     if (!userId) {
@@ -463,4 +463,8 @@ app.post("/crear_anuncio_charanga", async (req, res) => {
 
 
 // Iniciar el servidor
-app.listen(3000, () => console.log("Servidor corriendo en http://localhost:3000"));
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => {
+    console.log(`Servidor corriendo en http://localhost:${PORT}`);
+});
+
