@@ -13,6 +13,7 @@ import { PerfilComponent } from './components/perfil/perfil.component';
 import { HttpClientModule} from '@angular/common/http';
 import { OfertasComponent } from './components/ofertas/ofertas.component';
 import { MusicosComponent } from './components/musicos/musicos.component';
+import { ListadoCharangasComponent } from './components/listado-charangas/listado-charangas.component';
 
 @NgModule({
   declarations: [
@@ -25,7 +26,8 @@ import { MusicosComponent } from './components/musicos/musicos.component';
     ActosComponent,
     PerfilComponent,
     OfertasComponent,
-    MusicosComponent
+    MusicosComponent,
+    ListadoCharangasComponent,
   ],
   imports: [
     BrowserModule,

@@ -1,12 +1,13 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { BehaviorSubject, Observable, tap } from 'rxjs';
+import { environment } from '../../environments/environment';
 
 @Injectable({
   providedIn: 'root'
 })
 export class AuthService {
-  private apiUrl = 'http://localhost:3000';
+  private apiUrl =  environment.apiUrl;
 
 
   private userSubject = new BehaviorSubject<any>(this.getUser());
@@ -38,6 +39,17 @@ export class AuthService {
       })
     );
   }
+
+  setUser(user: any) {
+    localStorage.setItem("user", JSON.stringify(user));
+    this.userSubject.next(user);
+  }
+
+  updateUser(updatedUser: any) {
+    this.user$ = updatedUser;
+    localStorage.setItem('user', JSON.stringify(updatedUser));
+  }
+  
   
 
   logout() {

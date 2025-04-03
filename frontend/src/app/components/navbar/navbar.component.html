@@ -23,9 +23,12 @@
           </li>
 
           <!-- Usuario registrado-->
+          <li *ngIf="user" class="nav-item">
+            <a class="nav-link" routerLink="/listado-charangas">Nuestras Charangas</a>
+          </li>
 
           <li *ngIf="user" class="nav-item">
-            <a class="nav-link" routerLink="/charangas">Charangas</a>
+            <a class="nav-link" routerLink="/charangas">Anuncios Charangas</a>
           </li>
 
           <!-- Usuario cliente-->
@@ -41,7 +44,7 @@
             <a class="nav-link" routerLink="/actos">Actos</a>
           </li>
           <li *ngIf="rol === 'charanga'" class="nav-item">
-            <a class="nav-link" routerLink="/musicos">Musicos</a>
+            <a class="nav-link" routerLink="/musicos">Anuncios Musicos</a>
           </li>
 
           <!-- Usuario músico-->

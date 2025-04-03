@@ -1,29 +1,81 @@
 <div class="container mt-4">
-    <div class="card">
-      <div class="card-header text-center">
-        <h2>Perfil de Usuario</h2>
+  <div class="card p-4 shadow-lg">
+    <div class="row align-items-center">
+      <!-- Foto de perfil a la izquierda -->
+      <div class="col-md-3 text-center">
+        <img *ngIf="user.foto" [src]="user.foto" alt="Foto de perfil" class="rounded-circle img-fluid shadow" width="150" height="150">
       </div>
-      <div class="card-body text-center">
-        <h4>{{ user.name }}</h4>
+      
+      <!-- Información del usuario a la derecha -->
+      <div class="col-md-9">
+        <h2>{{ user.nombre }}</h2>
         <p><strong>Email:</strong> {{ user.email }}</p>
         <p><strong>Teléfono:</strong> {{ user.telefono }}</p>
         <p><strong>Rol:</strong> {{ user.rol }}</p>
-        <p><strong>Provincia:</strong> {{ user.idProvincia }}</p>
-        
-        <!-- Si el rol es musico-->
+        <p><strong>Provincia:</strong> {{ provincia }}</p>
+        <p><strong>Biografía:</strong> {{ user.biografia || 'Sin biografía' }}</p>
+        <p><strong>Valoración media:</strong> {{ user.valoracionMedia }}</p>
+
+        <!-- Si es músico -->
         <div *ngIf="user.rol === 'musico'">
-          <p><strong>Instrumento:</strong> {{ user.idInstrumento }}</p>
+          <p><strong>Instrumento:</strong> {{ instrumento }}</p>
           <p><strong>Nivel musical:</strong> {{ user.nivelMusical }}</p>
           <p><strong>Coche:</strong> {{ user.coche ? 'Sí' : 'No' }}</p>
         </div>
 
-        <!-- Si el rol es charanga-->
+        <!-- Si es charanga -->
         <div *ngIf="user.rol === 'charanga'">
           <p><strong>Año de fundación:</strong> {{ user.fundacion }}</p>
         </div>
-        
-        <button class="btn btn-primary">Editar Perfil</button>
+
+        <!-- Botón para abrir modal de edición -->
+        <button class="btn btn-outline-primary ms-auto" data-bs-toggle="modal" data-bs-target="#editProfileModal">
+          Editar Perfil
+        </button>
       </div>
     </div>
   </div>
-  
+</div>
+
+<!-- MODAL PARA EDITAR PERFIL -->
+<div class="modal fade" id="editProfileModal" tabindex="-1" aria-labelledby="editProfileModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="editProfileModalLabel">Editar Perfil</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <form #profileForm="ngForm" (ngSubmit)="actualizarPerfil()">
+          <!-- Foto de perfil -->
+          <div class="mb-3 text-center">
+            <img [src]="previewImage || user.foto" alt="Foto de perfil" class="rounded-circle mb-2" width="100" height="100">
+            <input type="file" (change)="onFileSelected($event)" class="form-control">
+          </div>
+
+          <div class="mb-3">
+            <label>Nombre</label>
+            <input type="text" class="form-control" [(ngModel)]="user.nombre" name="nombre" required>
+          </div>
+
+          <div class="mb-3">
+            <label>Teléfono</label>
+            <input type="text" class="form-control" [(ngModel)]="user.telefono" name="telefono">
+          </div>
+
+          <div class="mb-3">
+            <label>Biografía</label>
+            <textarea class="form-control" [(ngModel)]="user.biografia" name="biografia"></textarea>
+          </div>
+
+          <div class="mb-3">
+            <label>Nueva Contraseña</label>
+            <input type="password" class="form-control" [(ngModel)]="newPassword" name="password">
+          </div>
+
+          <button type="submit" class="btn btn-primary w-100">Guardar Cambios</button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>

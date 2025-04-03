@@ -13,7 +13,7 @@ export class LoginComponent {
 
   onSubmit() {
     this.authService.login(this.credentials).subscribe(res => {
-      alert("Login exitoso");
+      alert("Login correcto");
       localStorage.setItem("token", res.token);
       localStorage.setItem("user", JSON.stringify(res.user));
       this.router.navigate(['/perfil']);

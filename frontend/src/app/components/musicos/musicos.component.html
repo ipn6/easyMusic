@@ -1,1 +1,83 @@
-<p>En esta página los musicos podrán ofrecerse para tocar en fechas o lugares determinados.</p>
+
+  <div class="container mt-4">
+    <h2 class="text-primary">Anuncios de Músicos</h2>
+  
+    <!-- Sección Crear Anuncio -->
+    <div *ngIf="user.rol === 'musico'" class="card p-3 mb-4">
+      <h4>Crear Anuncio</h4>
+      <div class="row">
+        <div class="col-md-4 mb-2">
+          <input type="text" class="form-control" placeholder="Título" [(ngModel)]="nuevoAnuncio.titulo">
+        </div>
+        <div class="col-md-4 mb-2">
+          <textarea class="form-control" placeholder="Descripción" [(ngModel)]="nuevoAnuncio.descripcion"></textarea>
+        </div>
+        <div class="col-md-2 mb-2">
+          <input type="date" class="form-control" [(ngModel)]="nuevoAnuncio.fechaInicio">
+        </div>
+        <div class="col-md-2 mb-2">
+          <input type="date" class="form-control" [(ngModel)]="nuevoAnuncio.fechaFin">
+        </div>
+        <div class="col-md-4 mb-2">
+          <select class="form-select" [(ngModel)]="nuevoAnuncio.idProvincia">
+            <option value="">Selecciona una provincia</option>
+            <option *ngFor="let provincia of provincias" [value]="provincia.idProvincia">{{ provincia.nombre }}</option>
+          </select>
+        </div>
+        <div class="col-md-12 text-end">
+          <button class="btn btn-success" (click)="crearAnuncio()">Publicar</button>
+        </div>
+      </div>
+    </div>
+  
+    <!-- Filtros -->
+    <h4 class="text-secondary">Filtrar anuncios</h4>
+    <div class="row mb-4">
+      <div class="col-md-6">
+        <select class="form-select" [(ngModel)]="filtroProvincia" (change)="obtenerAnuncios()">
+          <option value="">Todas las provincias</option>
+          <option *ngFor="let provincia of provincias" [value]="provincia.idProvincia">{{ provincia.nombre }}</option>
+        </select>
+      </div>
+      <div class="col-md-6">
+        <select class="form-select" [(ngModel)]="filtroInstrumento" (change)="obtenerAnuncios()">
+          <option value="">Todos los instrumentos</option>
+          <option *ngFor="let instrumento of instrumentos" [value]="instrumento.idInstrumento">{{ instrumento.nombre }}</option>
+        </select>
+      </div>
+       <!-- Filtro por fecha inicio -->
+      <div class="col-md-3">
+        <input type="date" class="form-control" [(ngModel)]="fechaInicioFiltro" (change)="obtenerAnuncios()">
+      </div>
+
+      <!-- Filtro por fecha fin -->
+      <div class="col-md-3">
+        <input type="date" class="form-control" [(ngModel)]="fechaFinFiltro" (change)="obtenerAnuncios()">
+      </div>
+    </div>
+  
+    <!-- Lista de anuncios -->
+    <div class="row">
+      <div class="col-md-12">
+        <div *ngIf="anunciosFiltrados.length === 0" class="alert alert-warning text-center mt-3">
+          No se encontraron anuncios con los filtros seleccionados.
+        </div>
+        <div class="card p-3 mb-3" *ngFor="let anuncio of anunciosFiltrados">
+          <div class="d-flex align-items-center">
+            <img *ngIf="anuncio.foto" [src]="anuncio.foto" class="rounded-circle me-3" width="50" height="50" alt="Foto de perfil">
+            <h5 class="mb-0"><strong>{{ anuncio.nombre }}</strong></h5>
+          </div>
+          
+          <h5 class="mb-0">{{ anuncio.provincia}}</h5>
+          <h5 class="mb-0">{{ instrumentos[anuncio.idInstrumento -1].nombre }}</h5>
+          <h4 class="mt-2">{{ anuncio.titulo }}</h4>
+          <p>{{ anuncio.descripcion }}</p>
+          <p class="text-muted">
+            📅 {{ anuncio.fechaInicio | date:'dd/MM/yyyy' }} - {{ anuncio.fechaFin | date:'dd/MM/yyyy' }}
+          </p>
+        </div>
+      </div>
+    </div>
+
+  </div>
+  

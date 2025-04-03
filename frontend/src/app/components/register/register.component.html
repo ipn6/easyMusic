@@ -7,22 +7,24 @@
       <input type="password" class="form-control mt-2" placeholder="Confirmar contraseña" [(ngModel)]="user.confirmPassword" name="confirmPassword" required>
       <input type="number" class="form-control mt-2" placeholder="Telefono" [(ngModel)]="user.telefono" name="telefono" required>
       <br>
-      <label for="provincia">Provincia:</label>
+      <label for="provincia">Provincia: </label>
       <input
         type="text"
         id="provincia"
         [(ngModel)]="inputProvincia"
         (input)="filtrarProvincias()"
-        placeholder="Escribe para buscar..."
+        (change)="asignarIdProvincia()"
+        placeholder="Buscar provincia..."
         list="listaProvincias"
         name="provincia"
       >
       
       <datalist id="listaProvincias">
-        <option *ngFor="let provincia of provinciasFiltradas" [value]="provincia.nombre" (click)="seleccionarProvincia(provincia)"></option>
+        <option *ngFor="let provincia of provinciasFiltradas" [value]="provincia.nombre"></option>
       </datalist>
     
       <input type="hidden" [(ngModel)]="user.idProvincia" name="idProvincia">
+    
       <br>
       <label for="rol">Rol:</label>
         <select id="rol" [(ngModel)]="user.rol" name="rol" required>
@@ -33,7 +35,24 @@
 
          <!-- Si el usuario elige Músico -->
       <div *ngIf="user.rol === 'musico'">
-        <input type="number" class="form-control mt-2" placeholder="Instrumento" [(ngModel)]="user.idInstrumento" name="idInstrumento" required>
+        <label for="instrumento">Instrumento: </label>
+      <input
+        type="text"
+        id="instrumento"
+        [(ngModel)]="inputInstrumento"
+        (input)="filtrarInstrumentos()"
+        (change)="asignarIdInstrumento()"
+        placeholder="Buscar instrumento..."
+        list="listaInstrumentos"
+        name="instrumento"
+      >
+      
+      <datalist id="listaInstrumentos">
+        <option *ngFor="let instrumento of instrumentosFiltrados" [value]="instrumento.nombre"></option>
+      </datalist>
+    
+      <input type="hidden" [(ngModel)]="user.idInstrumento" name="idInstrumento">
+
         <input type="text" class="form-control mt-2" placeholder="Nivel musical" [(ngModel)]="user.nivelMusical" name="nivelMusical" required>
         <label class="mt-2">
           <input type="checkbox" [(ngModel)]="user.coche" name="coche"> ¿Tienes coche?
