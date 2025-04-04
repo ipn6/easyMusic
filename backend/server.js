@@ -9,7 +9,10 @@ const fs = require('fs');
 const path = require('path');
 const app = express();
 app.use(express.json());
-app.use(cors());
+app.use(cors({
+    origin: 'https://victorious-stone-011abec10.6.azurestaticapps.net',
+    credentials: true
+  }));
 const sharp = require('sharp');
 
 const storage = multer.memoryStorage();
@@ -17,6 +20,8 @@ const upload = multer({
     storage: storage,
     limits: { fileSize: 10 * 1024 * 1024 }, // 
   });
+
+  
 
 // Configurar conexión a MySQL
 const db = mysql.createPool({
