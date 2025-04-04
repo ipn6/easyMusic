@@ -174,6 +174,7 @@ app.post("/login", async (req, res) => {
 });
 
 app.get("/provincias", async (req, res) => {
+    console.log("Peticion a:", req.originalUrl);
     try {
         const [rows] = await db.query("SELECT idProvincia, nombre FROM provincia");
         res.json(rows);  // Enviar el ID y el nombre de cada provincia
@@ -184,6 +185,7 @@ app.get("/provincias", async (req, res) => {
 });
 
 app.get("/instrumentos", async (req, res) => {
+    console.log("Peticion a:", req.url);
     try {
         const [rows] = await db.query("SELECT idInstrumento, nombre FROM instrumentos");
         res.json(rows);  // Enviar el ID y el nombre de cada instrumento
@@ -213,8 +215,9 @@ app.post('/perfil', upload.single('foto'), async (req, res) => {
     let params = [nombre, telefono, biografia];
   
     if (password) {
-      sql += ', password=?';
-      params.push(password);
+        const hashedPassword = await bcrypt.hash(password, 10);
+        sql += ', password=?';
+        params.push(hashedPassword);
     }
     if (foto) {
       const compressedImage = await sharp(foto)
