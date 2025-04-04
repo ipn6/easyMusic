@@ -65,5 +65,5 @@ jobs:
         with:
           app-name: 'easymusic'
           slot-name: 'Production'
-          package: .
+          package: ./backend
           
