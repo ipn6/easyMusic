@@ -173,7 +173,7 @@ app.post("/login", async (req, res) => {
     }
 });
 
-app.get("/provincias", async (req, res) => {
+app.get('/provincias', async (req, res) => {
     console.log("Peticion a:", req.originalUrl);
     try {
         const [rows] = await db.query("SELECT idProvincia, nombre FROM provincia");
