@@ -11,7 +11,7 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 app.use(express.json());
 app.use(cors());
-const sharp = require('sharp');
+//const sharp = require('sharp');
 
 const storage = multer.memoryStorage();
 const upload = multer({
