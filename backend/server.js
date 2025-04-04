@@ -8,11 +8,9 @@ const multer = require('multer');
 const fs = require('fs');
 const path = require('path');
 const app = express();
+const PORT = process.env.PORT || 3000;
 app.use(express.json());
-app.use(cors({
-    origin: 'https://victorious-stone-011abec10.6.azurestaticapps.net',
-    credentials: true
-  }));
+app.use(cors());
 const sharp = require('sharp');
 
 const storage = multer.memoryStorage();
@@ -471,7 +469,7 @@ app.post("/crear_anuncio_charanga", async (req, res) => {
 
 
 // Iniciar el servidor
-const PORT = process.env.PORT || 3000;
+
 app.listen(PORT, () => {
     console.log(`Servidor corriendo en puerto  ${PORT}`);
 });
