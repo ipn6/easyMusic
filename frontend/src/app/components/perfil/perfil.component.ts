@@ -31,6 +31,7 @@ export class PerfilComponent implements OnInit {
   previewImage: string | null = null;
   private apiUrl =  environment.apiUrl;
   fotoSeleccionada: File | null = null;
+  fotoUrl: string = ''; // URL de la foto de perfil
 
 
   constructor(private authService: AuthService, private http: HttpClient, private router: Router) {
@@ -40,26 +41,19 @@ export class PerfilComponent implements OnInit {
     this.loadUser();
   }
 
+  getFotoUrl(id: number) {
+    if(`${this.apiUrl}/usuario/${id}/foto`){
+      this.fotoUrl = `${this.apiUrl}/usuario/${id}/foto`;
+    }
+  }
+
   loadUser() {
     this.user = this.authService.getUser();
-    this.cargarFotoPerfil();
+    this.getFotoUrl
     console.log("Foto de perfil:", this.user.foto);
 
     this.getInstrumento(this.user.idInstrumento);
     this.getProvincia(this.user.idProvincia);
-  }
-  cargarFotoPerfil() {
-    this.http.get(`${this.apiUrl}/fotoperfil`, {
-      headers: new HttpHeaders({ 'user-id': this.user.idUsuario }),
-      responseType: 'arraybuffer'
-    }).subscribe(response => {
-      const base64String = btoa(
-        new Uint8Array(response).reduce((data, byte) => data + String.fromCharCode(byte), '')
-      );
-      this.user.foto = `data:image/jpeg;base64,${base64String}`;
-    }, error => {
-      console.error('Error al cargar la foto:', error);
-    });
   }
 
   getInstrumento(id: number) {
@@ -122,10 +116,8 @@ export class PerfilComponent implements OnInit {
         'user-id': this.user.idUsuario,
       }
     }).subscribe(response => {
-      console.log('✅ Perfil actualizado:', response);
-      // Actualizar el usuario en el servicio AuthService
       this.authService.setUser(this.user); // Actualizar el usuario en el servicio
-      this.cargarFotoPerfil();
+      this.getFotoUrl(this.user.idUsuario); // Actualizar la URL de la foto
       this.router.navigate(['/perfil']); 
       alert('Perfil actualizado correctamente');
     }, error => {

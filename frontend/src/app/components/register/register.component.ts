@@ -19,58 +19,72 @@ interface Instrumento{
   templateUrl: './register.component.html',
 })
 export class RegisterComponent {
-  user = { nombre: '', email: '', password: '', confirmPassword: '', telefono: '', rol: 'cliente', idProvincia: 0,
-    idInstrumento: 0, nivelMusical: '', coche: '0', fundacion: ''
+  user = { nombre: '', email: '', password: '', confirmPassword: '', biografia: '', telefono: '', rol: '', idProvincia: null,
+    idInstrumento: null, nivelMusical: '', coche: '0', fundacion: ''
    };
 
   provincias: Provincia[] = [];
-  provinciasFiltradas: Provincia[] = []; // Provincias filtradas según la búsqueda
-  inputProvincia: string = ''; // Control del input
   instrumentos: Instrumento[] = [];
-  instrumentosFiltrados: Instrumento[] = [];
-  inputInstrumento: string = '';
   private apiUrl =  environment.apiUrl;
+  previewUrl: string | ArrayBuffer | null = null;
+  selectedFile: File | null = null;
+
 
 
   constructor(private authService: AuthService, private http: HttpClient, private router: Router) {}
 
   onSubmit() {
-    this.authService.register(this.user).subscribe(res => {
-      alert("Usuario registrado con éxito");
-      localStorage.setItem("token", res.token);
-      localStorage.setItem("user", JSON.stringify(res.user));
-      this.router.navigate(['/perfil']);
-    }, err => alert("Error en el registro"));
+    const formData = new FormData();
+  
+    // Añadir todos los campos de texto
+    for (const key in this.user) {
+      if (this.user.hasOwnProperty(key)) {
+        formData.append(key, (this.user as any)[key]);
+      }
+    }
+  
+    // Añadir la imagen si se ha seleccionado
+    if (this.selectedFile) {
+      formData.append('foto', this.selectedFile);
+    }
+  
+    // Enviar a través del servicio
+    this.authService.register(formData).subscribe(
+      res => {
+        alert("Usuario registrado con éxito");
+        localStorage.setItem("token", res.token);
+        localStorage.setItem("user", JSON.stringify(res.user));
+        this.router.navigate(['/perfil']);
+      },
+      err => alert("Error en el registro")
+    );
   }
+  
 
   ngOnInit(){
     this.cargarProvincias();
     this.cargarInstrumentos();
   }
 
+  onFileSelected(event: any): void {
+    const file = event.target.files[0];
+    if (file) {
+      this.selectedFile = file;
+  
+      // Para mostrar vista previa
+      const reader = new FileReader();
+      reader.onload = e => this.previewUrl = reader.result;
+      reader.readAsDataURL(file);
+    }
+  }
+
   cargarProvincias() {
     this.http.get<Provincia[]>(`${this.apiUrl}/provincias`).subscribe(
       (data) => {
         this.provincias = data;
-        this.provinciasFiltradas = data; // Inicialmente mostramos todas
       },
       (error) => console.error('Error al cargar provincias', error)
     );
-  }
-
-  filtrarProvincias() {
-    this.provinciasFiltradas = this.provincias.filter(prov =>
-      prov.nombre.toLowerCase().includes(this.inputProvincia.toLowerCase())
-    );
-  }
-
-  asignarIdProvincia() {
-    const provinciaSeleccionada = this.provincias.find(prov => prov.nombre === this.inputProvincia);
-    if (provinciaSeleccionada) {
-      this.user.idProvincia = provinciaSeleccionada.idProvincia;
-    } else {
-      this.user.idProvincia = 0; // Si no coincide, se pone en null
-    }
   }
 
   // Método para cargar los instrumentos desde el servidor
@@ -78,26 +92,9 @@ export class RegisterComponent {
     this.http.get<Instrumento[]>(`${this.apiUrl}/instrumentos`).subscribe(
       (data) => {
         this.instrumentos = data;
-        this.instrumentosFiltrados = data; // Inicialmente mostramos todas
       },
       (error) => console.error('Error al cargar instrumentos', error)
     );
   }
 
-  filtrarInstrumentos() {
-    this.instrumentosFiltrados = this.instrumentos.filter(inst =>
-      inst.nombre.toLowerCase().includes(this.inputInstrumento.toLowerCase())
-    );
-  }
-
-  asignarIdInstrumento() {
-    const instrumentoSeleccionado = this.instrumentos.find(inst => inst.nombre === this.inputInstrumento);
-    if (instrumentoSeleccionado) {
-      this.user.idInstrumento = instrumentoSeleccionado.idInstrumento;
-    } else {
-      this.user.idInstrumento = 0; // Si no coincide, se pone en 0
-    }
-  }
-
-  
 }

@@ -1,69 +1,79 @@
-<div class="container mt-5">
+<div class="container mb-3">
     <h2>Registro</h2>
-    <form (submit)="onSubmit()">
-      <input type="text" class="form-control" placeholder="Nombre" [(ngModel)]="user.nombre" name="nombre" required>
-      <input type="email" class="form-control mt-2" placeholder="Email" [(ngModel)]="user.email" name="email" required>
-      <input type="password" class="form-control mt-2" placeholder="Contraseña" [(ngModel)]="user.password" name="password" required>
-      <input type="password" class="form-control mt-2" placeholder="Confirmar contraseña" [(ngModel)]="user.confirmPassword" name="confirmPassword" required>
-      <input type="number" class="form-control mt-2" placeholder="Telefono" [(ngModel)]="user.telefono" name="telefono" required>
-      <br>
-      <label for="provincia">Provincia: </label>
-      <input
-        type="text"
-        id="provincia"
-        [(ngModel)]="inputProvincia"
-        (input)="filtrarProvincias()"
-        (change)="asignarIdProvincia()"
-        placeholder="Buscar provincia..."
-        list="listaProvincias"
-        name="provincia"
-      >
-      
-      <datalist id="listaProvincias">
-        <option *ngFor="let provincia of provinciasFiltradas" [value]="provincia.nombre"></option>
-      </datalist>
+    <div class="mb-3 text-center">
+      <img [src]="previewUrl || 'assets/perfil.png' " alt="Foto de perfil"
+           class="rounded-circle" style="width: 120px; height: 120px; object-fit: cover;">
+      <input type="file" class="form-control mt-2" (change)="onFileSelected($event)" accept="image/*">
+    </div>
+    <form #form="ngForm" (submit)="onSubmit()">
+      <div class="mb-3">
+        <input type="text" class="form-control" placeholder="Nombre" required [(ngModel)]="user.nombre" name="nombre" >
+      </div>
+      <div class="mb-3">
+        <input type="text" class="form-control" placeholder="Email" required [(ngModel)]="user.email" name="email" >
+      </div>
+      <div class="mb-3">
+        <input type="password" class="form-control" placeholder="Contraseña" required [(ngModel)]="user.password" name="password" >
+      </div>
+      <div class="mb-3">
+        <input type="password" class="form-control" placeholder="Confirmar contraseña" required [(ngModel)]="user.confirmPassword" name="confirmPassword" >
+      </div>
+      <div class="mb-3">
+        <input type="text" class="form-control" placeholder="Biografía" required [(ngModel)]="user.biografia" name="biografia">
+      </div>
+      <div class="mb-3">
+        <input type="number" class="form-control" placeholder="Teléfono" required [(ngModel)]="user.telefono" name="telefono">
+      </div>
+
+      <div class="mb-3">
+        <select input type="number" class="form-select" [(ngModel)]="user.idProvincia" name="idProvincia" required>
+          <option value="null"disabled selected>Selecciona una provincia</option>
+          <option *ngFor="let provincia of provincias" [ngValue]="provincia.idProvincia">{{ provincia.nombre }}</option>
+        </select>
+      </div>
     
-      <input type="hidden" [(ngModel)]="user.idProvincia" name="idProvincia">
-    
-      <br>
-      <label for="rol">Rol:</label>
-        <select id="rol" [(ngModel)]="user.rol" name="rol" required>
+      <div class="mb-3">
+        <select class="form-select" [(ngModel)]="user.rol" name="rol" required>
+          <option value="" disabled selected>Selecciona un rol</option>
             <option value="musico">Músico</option>
             <option value="charanga">Charanga</option>
             <option value="cliente">Cliente</option>
         </select>
+      </div>
 
          <!-- Si el usuario elige Músico -->
       <div *ngIf="user.rol === 'musico'">
-        <label for="instrumento">Instrumento: </label>
-      <input
-        type="text"
-        id="instrumento"
-        [(ngModel)]="inputInstrumento"
-        (input)="filtrarInstrumentos()"
-        (change)="asignarIdInstrumento()"
-        placeholder="Buscar instrumento..."
-        list="listaInstrumentos"
-        name="instrumento"
-      >
-      
-      <datalist id="listaInstrumentos">
-        <option *ngFor="let instrumento of instrumentosFiltrados" [value]="instrumento.nombre"></option>
-      </datalist>
-    
-      <input type="hidden" [(ngModel)]="user.idInstrumento" name="idInstrumento">
+        <div class="mb-3">
+          <select class="form-select" [(ngModel)]="user.idInstrumento" name="idInstrumento" required>
+            <option value="null" disabled>Selecciona tu instrumento</option>
+            <option *ngFor="let instrumento of instrumentos" [ngValue]="instrumento.idInstrumento">{{ instrumento.nombre }}</option>
+          </select>
+        </div>
 
-        <input type="text" class="form-control mt-2" placeholder="Nivel musical" [(ngModel)]="user.nivelMusical" name="nivelMusical" required>
-        <label class="mt-2">
-          <input type="checkbox" [(ngModel)]="user.coche" name="coche"> ¿Tienes coche?
-        </label>
+        <div class="mb-3">
+          <select class="form-select" [(ngModel)]="user.nivelMusical" name="nivelMusical" required>
+              <option value="" disabled selected>Selecciona tu nivel musical</option>
+              <option value="Sin estudios">Sin estudios</option>
+              <option value="Grado elemental">Grado elemental</option>
+              <option value="Grado profesional">Grado profesional</option>
+              <option value="Grado superior">Grado superior</option>
+          </select>
+        </div>
+
+        <div class="mb-3">
+          <label class="mt-2">
+            ¿Tienes coche? <input type="checkbox" [(ngModel)]="user.coche" name="coche"> 
+          </label>
+        </div>
       </div>
 
       <!-- Si el usuario elige Charanga -->
       <div *ngIf="user.rol === 'charanga'">
-        <input type="number" class="form-control mt-2" placeholder="Año de fundación" [(ngModel)]="user.fundacion" name="fundacion" required>
+        <div class="mb-3">
+          <input type="number" class="form-control" placeholder="Año de fundación" required [(ngModel)]="user.fundacion" name="fundacion" >
+        </div>
       </div>
-      <button class="btn btn-primary mt-3">Registrarse</button>
+      <button type="submit" class="btn btn-primary w-100" [disabled]="!form.valid" >Registrarse</button>
     </form>
   </div>
   

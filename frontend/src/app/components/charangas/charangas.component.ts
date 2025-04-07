@@ -77,4 +77,8 @@ export class CharangasComponent {
         this.nuevoAnuncio = { titulo: '', descripcion: '', idProvincia: '', fechaInicio: '', fechaFin: '' };
       });
     }
+
+    getFotoUrl(id: number): string {
+      return `${this.apiUrl}/usuario/${id}/foto`; 
+    }
 }

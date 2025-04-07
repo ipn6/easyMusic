@@ -6,7 +6,18 @@
         <h4> Crear oferta</h4>
         <div class="row">
             <div class="col-md-4 mb-2">
-                <input type="text" class="form-control" placeholder="Título" [(ngModel)]="nuevaOferta.nombre">
+                <input type="text" class="form-control" placeholder="Título" [(ngModel)]="nuevaOferta.titulo">
+            </div>
+            <div class="col-md-4 mb-2">
+                <select class="form-select" [(ngModel)]="nuevaOferta.tipo">
+                    <option value="" disabled selected>Tipo de acto</option>
+                    <option value="Desfile">Desfile</option>
+                    <option value="Pasacalles">Pasacalles</option>
+                    <option value="Concierto">Concierto</option>
+                    <option value="Cumpleaños">Cumpleaños/Serenata</option>
+                    <option value="Boda">Boda/Bautizo/Comunión</option>
+                    <option value="DiaCompleto">Día completo</option>
+                </select>   
             </div>
             <div class="col-md-4 mb-2">
                 <textarea class="form-control" placeholder="Descripción" [(ngModel)]="nuevaOferta.descripcion"></textarea>
@@ -29,5 +40,97 @@
             <div class="col-md-12 text-end">
                 <button class="btn btn-success" (click)="crearOferta()">Publicar</button>
             </div>
+        </div>
+    </div>
+
+    <!-- Filtros -->
+    <h4 class="text-secondary">Filtrar ofertas</h4>
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <select class="form-select" [(ngModel)]="filtroProvincia" (change)="obtenerOfertas()">
+            <option value="">Todas las provincias</option>
+            <option *ngFor="let provincia of provincias" [value]="provincia.idProvincia">{{ provincia.nombre }}</option>
+            </select>
+        </div>
+        <!-- Filtro por fecha inicio -->
+        <div class="col-md-3">
+            <input type="date" class="form-control" [(ngModel)]="fechaInicioFiltro" (change)="obtenerOfertas()">
+        </div>
+
+        <!-- Filtro por fecha fin -->
+        <div class="col-md-3">
+            <input type="date" class="form-control" [(ngModel)]="fechaFinFiltro" (change)="obtenerOfertas()">
+        </div>
+
+      <!-- Filtro por tipo de acto -->
+        <div class="col-md-3">
+            <select class="form-select" [(ngModel)]="filtroTipo" (change)="obtenerOfertas()">
+            <option value="">Todos los tipos de acto</option>
+            <option value="Desfile">Desfile</option>
+            <option value="Pasacalles">Pasacalles</option>
+            <option value="Concierto">Concierto</option>
+            <option value="Cumpleaños">Cumpleaños/Serenata</option>
+            <option value="Boda">Boda/Bautizo/Comunión</option>
+            <option value="DiaCompleto">Día completo</option>
+            </select>
+        </div>
+    </div>
+
+    <!-- Lista de ofertas-->
+    <div *ngIf="ofertasFiltradas.length > 0">
+        <div *ngFor="let oferta of ofertasFiltradas" class="charanga-card card mb-3 shadow">
+            <!-- Cabecera -->
+            <div class="d-flex justify-content-between align-items-center p-3" style="position: relative;">
+                <div>
+                    <h5 class="mb-1">{{ oferta.nombre }}</h5>
+                    <p class="mb-0">
+                        <strong>Valoración media:</strong> {{ oferta.valoracionMedia }}
+                    </p>
+                </div>
+                <div style="margin-left: auto; margin-right: 10px;">
+                    <img [src]="getFotoUrl(oferta.idUsuario) || 'assets/perfil.png'" 
+                        alt="Foto de oferta" 
+                        class="rounded-circle"
+                        style="width: 80px; height: 80px; object-fit: cover;">
+                </div>
+            </div>
+        
+            <!-- Línea separadora -->
+            <hr style="border-top: 1px solid black; margin: 0 15px;" />
+        
+            <!-- Cuerpo -->
+            <div class="card-body">
+                <div class="col-md-3 d-flex align-items-center justify-content-center">
+                    <h5 class="card-title">{{ oferta.titulo }}</h5>
+                </div>
+                
+                <p class="card-text"><strong>Tipo de acto: </strong> 
+                <span *ngIf="oferta.tipo === 'Desfile'">Desfile</span>
+                <span *ngIf="oferta.tipo === 'Pasacalles'">Pasacalles</span>
+                <span *ngIf="oferta.tipo === 'Concierto'">Concierto</span>
+                <span *ngIf="oferta.tipo === 'Cumpleaños'">Cumpleaños/Serenata</span>
+                <span *ngIf="oferta.tipo === 'Boda'">Boda/Bautizo/Comunión</span>
+                <span *ngIf="oferta.tipo === 'DiaCompleto'">Día completo</span>
+                </p>
+                <p class="card-text"><strong>Descripción:</strong> {{ oferta.descripcion }}</p>
+                <p class="card-text"><strong>Fecha:</strong> 
+                {{ oferta.fechaInicio | date:'dd/MM/yyyy' }} - {{ oferta.fechaFin | date:'dd/MM/yyyy' }}
+                </p>
+                <p class="card-text"><strong>Provincia:</strong> {{ oferta.provincia }}</p>
+                <p class="card-text"><strong>Dirección:</strong> {{ oferta.direccion }}</p>
+        
+                <div class="text-end">
+                <button class="btn btn-primary">Ver detalles</button>
+                </div>
+            </div>
+        </div>
+    </div>
+  
+   <!-- Mensaje si no hay anuncios -->
+   <div *ngIf="ofertasFiltradas.length === 0" class="alert alert-warning text-center mt-3">
+    No se encontraron ofertas con los filtros seleccionados.
+  </div>
+  
+
 
 </div>

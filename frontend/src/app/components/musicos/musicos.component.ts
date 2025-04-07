@@ -90,6 +90,10 @@ export class MusicosComponent {
     );
   }
 
+  getFotoUrl(id: number): string {
+    return `${this.apiUrl}/usuario/${id}/foto`; 
+  }
+
   crearAnuncio() {
     const anuncioData = { ...this.nuevoAnuncio, idUsuario: this.user.idUsuario };
     this.http.post(`${this.apiUrl}/crear_anuncio_musico`, anuncioData).subscribe(() => {

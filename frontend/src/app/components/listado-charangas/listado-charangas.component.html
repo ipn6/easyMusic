@@ -17,17 +17,22 @@
     <div *ngIf="charangasFiltradas.length > 0">
       <div *ngFor="let charanga of charangasFiltradas" class="charanga-card card mb-3 shadow">
         <div class="row g-0">
-          <div class="col-md-3 d-flex align-items-center justify-content-center">
-            <img [src]="charanga.foto" alt="Foto" class="rounded-circle img-fluid p-3">
+          <div class="d-flex justify-content-center align-items-center p-3" style="position: relative;">
+            <img [src]="getFotoUrl(charanga.idUsuario) || 'assets/perfil.png' " alt="Foto" 
+            class="rounded-circle" style="width: 150px; height: 150px; object-fit: cover;">
           </div>
           <div class="col-md-9">
             <div class="card-body">
-              <h5 class="card-title">{{ charanga.nombre }}</h5>
+              <div class="col-md-3 d-flex align-items-center justify-content-center">
+                <h5 class="card-title" >{{ charanga.nombre }}</h5>
+              </div>
+              
               <p class="card-text"><strong>Email:</strong> {{ charanga.email }}</p>
               <p class="card-text"><strong>Teléfono:</strong> {{ charanga.telefono }}</p>
               <p class="card-text"><strong>Provincia:</strong> {{ charanga.provincia }}</p>
               <p class="card-text"><strong>Año de Fundación:</strong> {{ charanga.fundacion }}</p>
               <p class="card-text"><strong>Biografía:</strong> {{ charanga.biografia }}</p>
+              <p class="card-text"><strong>Valoración media:</strong> {{ charanga.valoracionMedia}}</p>
             </div>
           </div>
         </div>

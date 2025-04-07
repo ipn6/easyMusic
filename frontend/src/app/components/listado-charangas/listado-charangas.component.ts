@@ -55,4 +55,8 @@ export class ListadoCharangasComponent {
     );
   }
 
+  getFotoUrl(id: number): string {
+    return `${this.apiUrl}/usuario/${id}/foto`; 
+  }
+
 }

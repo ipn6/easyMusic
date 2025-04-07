@@ -11,7 +11,6 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 app.use(express.json());
 app.use(cors());
-//const sharp = require('sharp');
 
 const storage = multer.memoryStorage();
 const upload = multer({
@@ -49,24 +48,32 @@ async function testDB() {
 
 testDB();
 
-app.post("/register", async (req, res) => {
-    const { nombre, email, password, confirmPassword, telefono, rol, idProvincia, idInstrumento, nivelMusical, coche, fundacion } = req.body;
+app.post("/register", upload.single("foto"), async (req, res) => {
+    const { nombre, email, password, confirmPassword, biografia, telefono, rol, idProvincia, idInstrumento, nivelMusical, coche, fundacion } = req.body;
 
     if (password !== confirmPassword) {
         return res.status(400).json({ error: "Las contraseñas no coinciden" });
     }
+    let valoracionMedia = 0.0;
 
     try {
         const hashedPassword = await bcrypt.hash(password, 10);
         const connection = await db.getConnection(); // Obtener una conexión del pool
-
+        let foto = req.file ? req.file.buffer : null;
+        console.log("Foto recibida:", req.file);
         await connection.beginTransaction();
 
         // Insertar usuario
-        const sqlUsuario = "INSERT INTO usuarios (email, password, nombre, rol, telefono, idProvincia) VALUES (?, ?, ?, ?, ?, ?)";
-        const [result] = await connection.query(sqlUsuario, [email, hashedPassword, nombre, rol, telefono, idProvincia]);
+        const sqlUsuario = "INSERT INTO usuarios (email, password, nombre, rol, telefono, idProvincia, foto, biografia, valoracionMedia) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
+        const [result] = await connection.query(sqlUsuario, [email, hashedPassword, nombre, rol, telefono, idProvincia, foto, biografia, valoracionMedia]);
 
         const userId = result.insertId;
+
+        if(coche === "false"){
+            coche2 = 0;
+        }else{
+            coche2 = 1;
+        }
 
         // Insertar en clientes, musicos o charangas
         if(rol === "cliente") {
@@ -74,7 +81,7 @@ app.post("/register", async (req, res) => {
             await connection.query(sql2, [userId]);
         }else if(rol === "musico") {
             const sql2 = "INSERT INTO musicos (idMusico, idInstrumento, nivelMusical, coche) VALUES (?, ?, ?, ?)";
-            await connection.query(sql2, [userId, idInstrumento, nivelMusical, coche]);
+            await connection.query(sql2, [userId, idInstrumento, nivelMusical, coche2]);
         }
         else{
 
@@ -87,9 +94,10 @@ app.post("/register", async (req, res) => {
         await connection.commit();
         connection.release(); // Liberar conexión
         let user = {};
-        let foto = '';
-        let valoracionMedia = 0.0;
-        let biografia = '';
+        
+        if(foto){
+            foto = foto.toString('base64');
+        }
 
         if(rol === "musico") {
             user = { idUsuario: userId, nombre, email, telefono, rol, idProvincia, foto, valoracionMedia, biografia, 
@@ -177,7 +185,6 @@ app.post("/login", async (req, res) => {
 });
 
 app.get('/provincias', async (req, res) => {
-    console.log("Peticion a:", req.originalUrl);
     try {
         const [rows] = await db.query("SELECT idProvincia, nombre FROM provincia");
         res.json(rows);  // Enviar el ID y el nombre de cada provincia
@@ -188,7 +195,6 @@ app.get('/provincias', async (req, res) => {
 });
 
 app.get("/instrumentos", async (req, res) => {
-    console.log("Peticion a:", req.url);
     try {
         const [rows] = await db.query("SELECT idInstrumento, nombre FROM instrumentos");
         res.json(rows);  // Enviar el ID y el nombre de cada instrumento
@@ -198,8 +204,26 @@ app.get("/instrumentos", async (req, res) => {
     }
 });
 
+app.get("/usuario/:id/foto", async (req, res) => {
+    const userId = req.params.id;
+  
+    try {
+      const [rows] = await db.query("SELECT foto FROM usuarios WHERE idUsuario = ?", [userId]);
+  
+      if (rows.length === 0 || !rows[0].foto) {
+        return res.status(404).send("Foto no encontrada");
+      }
+  
+      const foto = rows[0].foto;
+      res.setHeader("Content-Type", "image/jpeg"); // o image/png si corresponde
+      res.send(foto);
+    } catch (err) {
+      console.error(err);
+      res.status(500).send("Error al obtener la imagen");
+    }
+  });
+
 app.post('/perfil', upload.single('foto'), async (req, res) => {
-    console.log('⚡ Petición recibida en /perfil');
   
     const userId = req.headers['user-id'];
     console.log('🆔 ID del usuario:', userId);
@@ -223,13 +247,8 @@ app.post('/perfil', upload.single('foto'), async (req, res) => {
         params.push(hashedPassword);
     }
     if (foto) {
-      const compressedImage = await sharp(foto)
-        .resize(500, 500, { fit: 'inside' }) // Redimensiona la imagen sin deformarla
-        .jpeg({ quality: 80 }) // Reduce la calidad al 80%
-        .toBuffer(); 
-      
       sql += ', foto=?';
-      params.push(compressedImage);
+      params.push(foto);
     }
     sql += ' WHERE idUsuario=?';
     params.push(userId);
@@ -255,35 +274,13 @@ app.post('/perfil', upload.single('foto'), async (req, res) => {
     }
   });
   
-  // Ruta para obtener la foto del usuario autenticado
-  app.get('/fotoperfil', async (req, res) => {
-    const userId = req.headers['user-id'];
 
-    if (!userId) {
-        return res.status(400).json({ message: 'ID de usuario no proporcionado' });
-    }
-
-    try {
-        const [rows] = await db.query('SELECT foto FROM usuarios WHERE idUsuario = ?', [userId]);
-
-        if (rows.length === 0 || !rows[0].foto) {
-            return res.status(404).send('Imagen no encontrada');
-        }
-
-        // Convertir BLOB a Base64
-        const fotoBase64 = Buffer.from(rows[0].foto).toString('base64');
-        res.json({ foto: fotoBase64 });
-    } catch (error) {
-        console.error('Error al obtener la foto:', error);
-        res.status(500).json({ message: 'Error al obtener la foto' });
-    }
-});
 
 app.get("/charangas", async (req, res) => {
     let{ idProvincia } = req.query;
 
     let sql = `
-        SELECT u.idUsuario, u.nombre, u.email, u.telefono, u.foto, u.biografia, 
+        SELECT u.idUsuario, u.nombre, u.email, u.telefono, u.foto, u.biografia, u.valoracionMedia, 
                p.nombre AS provincia, c.fundacion
         FROM usuarios u
         JOIN charangas c ON u.idUsuario = c.idCharanga
@@ -314,7 +311,7 @@ app.get("/anuncios_charangas", async (req, res) => {
 
     let sql = `
         SELECT a.idAnuncio, a.titulo, a.descripcion, a.fechaInicio, a.fechaFin,
-               u.idUsuario, u.nombre, u.foto AS foto, 
+               u.idUsuario, u.nombre, u.foto AS foto, u.valoracionMedia, 
                p.nombre AS provincia
         FROM anuncios a
         JOIN anuncios_charangas ac ON a.idAnuncio = ac.idAnuncio
@@ -363,7 +360,7 @@ app.get("/anuncios_musicos", async (req, res) => {
 
     let sql = `
         SELECT a.idAnuncio, a.titulo, a.descripcion, a.fechaInicio, a.fechaFin,
-               u.idUsuario, u.nombre, u.foto AS foto, 
+               u.idUsuario, u.nombre, u.foto AS foto, u.valoracionMedia,
                p.nombre AS provincia, m.idInstrumento
         FROM anuncios a
         JOIN anuncios_musicos am ON a.idAnuncio = am.idAnuncio
@@ -465,6 +462,81 @@ app.post("/crear_anuncio_charanga", async (req, res) => {
 }
 );
 
+app.get("/ofertas", async (req, res) => {
+    let { idProvincia, fechaInicio, fechaFin, tipo} = req.query;
+
+    if (!fechaInicio) {
+        fechaInicio = new Date().toISOString().split('T')[0];  // Asigna hoy por defecto
+    }
+
+    let sql = `
+        SELECT o.idOferta, o.titulo, o.direccion, o.tipo, o.descripcion, o.fechaInicio, o.fechaFin,
+               u.idUsuario, u.nombre, u.valoracionMedia, u.foto AS foto, 
+               p.nombre AS provincia
+        FROM ofertas o
+        JOIN usuarios u ON o.idCliente = u.idUsuario
+        JOIN provincia p ON o.idProvincia = p.idProvincia
+    `;
+
+    let params = [];
+    let conditions = [];
+
+    if (idProvincia) {
+        conditions.push("o.idProvincia = ?");
+        params.push(idProvincia);
+    }
+
+    if (fechaInicio) {
+        conditions.push("o.fechaInicio >= ?");
+        params.push(fechaInicio);
+    }
+    if (fechaFin) {
+        conditions.push("o.fechaFin <= ?");
+        params.push(fechaFin);
+    }
+    if (tipo) {
+        conditions.push("o.tipo = ?");
+        params.push(tipo);
+    }
+
+    if (conditions.length > 0) {
+        sql += " WHERE " + conditions.join(" AND ");
+    }
+
+    try {
+        const [rows] = await db.query(sql, params);
+        res.json(rows); 
+    } catch (error) {
+        console.error("Error al obtener ofertas:", error);
+        res.status(500).json({ error: "Error al obtener ofertas" });
+    }
+}
+);
+
+app.post("/crear_oferta", async (req, res) => {
+    const { idCliente, titulo, direccion, tipo, descripcion, fechaInicio, fechaFin, idProvincia } = req.body;
+
+    try {
+        const connection = await db.getConnection(); // Obtener una conexión del pool
+
+        await connection.beginTransaction();
+
+        // Insertar oferta
+        const sqlAnuncio = "INSERT INTO ofertas (idCliente, titulo, direccion, tipo, descripcion, fechaInicio, fechaFin, idProvincia) VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
+        const [result] = await connection.query(sqlAnuncio, [idCliente, titulo, direccion, tipo, descripcion, fechaInicio, fechaFin, idProvincia]);
+
+        const idOferta = result.insertId;
+
+        await connection.commit();
+        connection.release(); // Liberar conexión
+
+        res.json({ message: "Oferta creado con éxito", idOferta });
+    } catch (error) {
+        console.error("Error al crear oferta:", error);
+        res.status(500).json({ error: "Error al crear oferta" });
+    }
+}
+);
 
 
 

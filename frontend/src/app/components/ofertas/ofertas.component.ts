@@ -18,9 +18,12 @@ export class OfertasComponent {
   user: any = {};
   provincias:  Provincia[] = [];
   filtroProvincia: string = '';
+  fechaInicioFiltro: string = '';
+  fechaFinFiltro: string = '';
+  filtroTipo: string = '';
   ofertas: any[] = []; // Todos las ofertas
   ofertasFiltradas: any[] = []; // Ofertas después del filtro
-  nuevaOferta = { nombre: '', descripcion: '', idCliente:'', idCharanga:'', idProvincia: '', fechaInicio: '', 
+  nuevaOferta = { titulo: '', descripcion: '', idCliente:'', idCharanga:'', idProvincia: '', fechaInicio: '', 
     fechaFin: '', direccion: '', tipo: '', contratada: '', valoracionCliente: '', valoracionCharanga: '' };
   private apiUrl =  environment.apiUrl;
 
@@ -28,7 +31,10 @@ export class OfertasComponent {
     
   ngOnInit() {
     this.user = this.authService.getUser();
+    this.obtenerOfertas();
     this.obtenerProvincias();
+    const hoy = new Date().toISOString().split('T')[0];
+    this.fechaInicioFiltro = hoy;
   }
 
   obtenerProvincias() {
@@ -45,6 +51,15 @@ export class OfertasComponent {
     if (this.filtroProvincia) {
       params.idProvincia = this.filtroProvincia;
     }
+    if (this.fechaInicioFiltro) {
+      params.fechaInicio = this.fechaInicioFiltro || new Date().toISOString().split('T')[0]
+    }
+    if (this.fechaFinFiltro) {
+      params.fechaFin = this.fechaFinFiltro;
+    }
+    if (this.filtroTipo) {
+      params.tipo = this.filtroTipo;
+    }
     this.http.get<any[]>(`${this.apiUrl}/ofertas`, { params }).subscribe(
       (data) => {
         console.log("Ofertas recibidas después de aplicar filtro:", data);
@@ -60,8 +75,12 @@ export class OfertasComponent {
     const ofertaData = { ...this.nuevaOferta, idCliente: this.user.idUsuario };
     this.http.post(`${this.apiUrl}/crear_oferta`, ofertaData).subscribe(() => {
       this.obtenerOfertas();
-      this.nuevaOferta = { nombre: '', descripcion: '', idCliente:'', idCharanga:'', idProvincia: '', fechaInicio: '', 
+      this.nuevaOferta = { titulo: '', descripcion: '', idCliente:'', idCharanga:'', idProvincia: '', fechaInicio: '', 
         fechaFin: '', direccion: '', tipo: '', contratada: '', valoracionCliente: '', valoracionCharanga: '' };
     });
+  }
+
+  getFotoUrl(id: number): string {
+    return `${this.apiUrl}/usuario/${id}/foto`; 
   }
 }
