@@ -1,5 +1,8 @@
 <div class="container mt-4">
-    <h2 class="text-primary">Ofertas para charangas</h2>
+    
+    <h2 *ngIf="user.rol === 'charanga'" class="text-primary">Ofertas para charangas</h2>
+    <h2 *ngIf="user.rol === 'cliente'" class="text-primary">Mis ofertas</h2>
+
 
     <!-- Sección Crear Oferta -->
      <div *ngIf="user.rol === 'cliente'" class="card p-3 mb-4">
@@ -76,9 +79,74 @@
         </div>
     </div>
 
-    <!-- Lista de ofertas-->
-    <div *ngIf="ofertasFiltradas.length > 0">
+    <!-- Lista de ofertas para charangas-->
+    <div *ngIf="ofertasFiltradas.length > 0 && user.rol === 'charanga'">
         <div *ngFor="let oferta of ofertasFiltradas" class="charanga-card card mb-3 shadow">
+            <!-- Cabecera -->
+            <div class="d-flex justify-content-between align-items-center p-3" style="position: relative;">
+                <div>
+                    <h5 class="mb-1">{{ oferta.nombre }}</h5>
+                    <p class="mb-0">
+                        <strong>Valoración media:</strong> {{ oferta.valoracionMedia }}
+                    </p>
+                </div>
+                <div style="margin-left: auto; margin-right: 10px;">
+                    <img [src]="getFotoUrl(oferta.idUsuario) || 'assets/perfil.png'" 
+                        alt="Foto de oferta" 
+                        class="rounded-circle"
+                        style="width: 80px; height: 80px; object-fit: cover;">
+                </div>
+            </div>
+        
+            <!-- Línea separadora -->
+            <hr style="border-top: 1px solid black; margin: 0 15px;" />
+        
+            <!-- Cuerpo -->
+            <div class="card-body">
+                <div class="col-md-3 d-flex align-items-center justify-content-center">
+                    <h5 class="card-title">{{ oferta.titulo }}</h5>
+                </div>
+                
+                <p class="card-text"><strong>Tipo de acto: </strong> 
+                <span *ngIf="oferta.tipo === 'Desfile'">Desfile</span>
+                <span *ngIf="oferta.tipo === 'Pasacalles'">Pasacalles</span>
+                <span *ngIf="oferta.tipo === 'Concierto'">Concierto</span>
+                <span *ngIf="oferta.tipo === 'Cumpleaños'">Cumpleaños/Serenata</span>
+                <span *ngIf="oferta.tipo === 'Boda'">Boda/Bautizo/Comunión</span>
+                <span *ngIf="oferta.tipo === 'DiaCompleto'">Día completo</span>
+                </p>
+                <p class="card-text"><strong>Descripción:</strong> {{ oferta.descripcion }}</p>
+                <p class="card-text"><strong>Fecha:</strong> 
+                {{ oferta.fechaInicio | date:'dd/MM/yyyy' }} - {{ oferta.fechaFin | date:'dd/MM/yyyy' }}
+                </p>
+                <p class="card-text"><strong>Provincia:</strong> {{ oferta.provincia }}</p>
+                <p class="card-text"><strong>Dirección:</strong> {{ oferta.direccion }}</p>
+                <div class="text-end">
+                    <button *ngIf="!esRechazada(oferta.idOferta)" 
+                        class="btn" 
+                        [ngClass]="contieneOferta(oferta.idOferta) ? 'btn-secondary' : 'btn-success'" 
+                        [disabled]="contieneOferta(oferta.idOferta)"
+                        (click)="interesarse(oferta)">
+                        {{ contieneOferta(oferta.idOferta) ? 'Solicitado' : 'Me interesa!' }}
+                    </button>
+                    <button *ngIf="esRechazada(oferta.idOferta)"
+                        class="btn btn-danger" disabled>
+                        Solicitud rechazada
+                    </button>
+                        
+                </div>
+            </div>
+        </div>
+    </div>
+  
+   <!-- Mensaje si no hay anuncios -->
+   <div *ngIf="ofertasFiltradas.length === 0 && user.rol === 'charanga'" class="alert alert-warning text-center mt-3">
+    No se encontraron ofertas con los filtros seleccionados.
+  </div>
+
+    <!-- Lista de ofertas del cliente-->
+    <div *ngIf="ofertasUsuario.length > 0 && user.rol === 'cliente'">
+        <div *ngFor="let oferta of ofertasUsuario" class="charanga-card card mb-3 shadow">
             <!-- Cabecera -->
             <div class="d-flex justify-content-between align-items-center p-3" style="position: relative;">
                 <div>
@@ -120,17 +188,136 @@
                 <p class="card-text"><strong>Dirección:</strong> {{ oferta.direccion }}</p>
         
                 <div class="text-end">
-                <button class="btn btn-primary">Ver detalles</button>
+                    <button class="btn btn-primary" (click)="verOferta(oferta)" data-bs-toggle="modal" data-bs-target="#verDetallesOferta" >
+                        Ver detalles
+                      </button>
                 </div>
             </div>
         </div>
     </div>
-  
+
    <!-- Mensaje si no hay anuncios -->
-   <div *ngIf="ofertasFiltradas.length === 0" class="alert alert-warning text-center mt-3">
+   <div *ngIf="ofertasUsuario.length === 0 && user.rol === 'cliente'" class="alert alert-warning text-center mt-3">
     No se encontraron ofertas con los filtros seleccionados.
   </div>
   
+    <!-- Aqui se muestran las solicitudes recibidas-->
+    <div class="modal fade" id="verDetallesOferta" tabindex="-1" aria-labelledby="verDetallesOfertaLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
 
+                    <h5 *ngIf="ofertaSeleccionada.contratada === 0" class="modal-title" id="verDetallesOfertaLabel">Solicitudes recibidas</h5>
+                    <h5 *ngIf="ofertaSeleccionada.contratada === 1" class="modal-title" id="verDetallesOfertaLabel">Solicitud aceptada</h5>
+
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+
+                </div>
+
+                <!-- Si se ha aceptado alguna oferta-->
+                <div *ngIf="ofertaSeleccionada.contratada === 1">
+                    <ul class="list-group">
+                        <li class="list-group-item d-flex justify-content-between align-items-start flex-column flex-md-row">
+                            <div class="d-flex flex-grow-1">
+                                <div class="me-3">
+                                    <p class="mb-1"><strong>Acto:</strong> {{ ofertaSeleccionada.titulo }}</p>
+                                    <p class="mb-1">
+                                        <strong>Tipo de acto: </strong>
+                                            <span *ngIf="ofertaSeleccionada.tipo === 'Desfile'">Desfile</span>
+                                            <span *ngIf="ofertaSeleccionada.tipo === 'Pasacalles'">Pasacalles</span>
+                                            <span *ngIf="ofertaSeleccionada.tipo === 'Concierto'">Concierto</span>
+                                            <span *ngIf="ofertaSeleccionada.tipo === 'Cumpleaños'">Cumpleaños/Serenata</span>
+                                            <span *ngIf="ofertaSeleccionada.tipo === 'Boda'">Boda/Bautizo/Comunión</span>
+                                            <span *ngIf="ofertaSeleccionada.tipo === 'DiaCompleto'">Día completo</span>        
+                                    </p>
+                                    <p class="mb-1"><strong>Provincia:</strong> {{ ofertaSeleccionada.provincia }}</p>
+                                    <p class="mb-1"><strong>Descripción:</strong> {{ ofertaSeleccionada.descripcion }}</p>
+                                    <p class="mb-1"><strong>Fecha:</strong> 
+                                        {{ ofertaSeleccionada.fechaInicio | date:'dd/MM/yyyy' }} - {{ ofertaSeleccionada.fechaFin | date:'dd/MM/yyyy' }}
+                                    <p class="mb-1"><strong>Dirección:</strong> {{ ofertaSeleccionada.direccion }}</p>
+                                    
+                                    <!-- Línea separadora -->
+                                    <hr style="border-top: 1px solid black; margin: 10px 0;" />
+                                    
+                                    <p class="mb-1"><strong>Charanga aceptada:</strong> {{ solicitudAceptada.nombre }}</p>
+                                    <!-- Mostrar valoración o asignar valoración -->
+                                    <div *ngIf="ofertaSeleccionada.valoracionCharanga === ''">
+                                        <p class="mb-1"><strong>Valorar Charanga:</strong></p>
+                                        <select class="form-select w-auto" [(ngModel)]="ofertaSeleccionada.valoracionCharanga">
+                                            <option *ngFor="let valor of [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10]" [value]="valor">{{ valor }}</option>
+                                        </select>
+                                        <button class="btn btn-success mt-2" (click)="asignarValoracion(ofertaSeleccionada.idOferta, solicitudAceptada.idCharanga, ofertaSeleccionada.valoracionCharanga, ofertaSeleccionada.tipo)">
+                                            Asignar valoración
+                                        </button>
+                                    </div>
+                                    <div *ngIf="ofertaSeleccionada.valoracionCharanga !== ''">
+                                        <p class="mb-1"><strong>Valoración asignada:</strong> {{ ofertaSeleccionada.valoracionCharanga }}</p>
+                                    </div>
+
+                                </div>
+
+                                <!-- Imagen y botones -->
+                                <div class="d-flex flex-column align-items-center ms-auto">
+                                    <img [src]="getFotoUrl(solicitudAceptada.idCharanga) || 'assets/perfil.png'" 
+                                        alt="Foto de solicitud" 
+                                        class="rounded-circle mb-3"
+                                        style="width: 80px; height: 80px; object-fit: cover;">
+                                </div>
+                            </div>
+                        </li>
+                    </ul>
+                </div>
+
+                <!-- Si no se ha aceptado ninguna-->
+                <div *ngIf="solicitudesSinResponder.length > 0 && ofertaSeleccionada.contratada === 0">
+                    <ul class="list-group">
+                        <li *ngFor="let solicitud of solicitudesSinResponder" class="list-group-item d-flex justify-content-between align-items-start flex-column flex-md-row">
+    
+                            <div class="d-flex flex-grow-1">
+                                <!-- Información textual -->
+                                <div class="me-3">
+                                    <p class="mb-1"><strong>Nombre:</strong> {{ solicitud.nombre }}</p>
+                                    <p class="mb-1"><strong>Provincia:</strong> {{ solicitud.provincia}}</p>
+                                    <p class="mb-1"><strong>Valoración media:</strong> {{ solicitud.valoracionMedia }}</p>
+                                    <p class="mb-1">
+                                        <strong>Valoración media en </strong>
+                                        <strong>
+                                            <span *ngIf="ofertaSeleccionada.tipo === 'Desfile'">Desfile:</span>
+                                            <span *ngIf="ofertaSeleccionada.tipo === 'Pasacalles'">Pasacalles:</span>
+                                            <span *ngIf="ofertaSeleccionada.tipo === 'Concierto'">Concierto:</span>
+                                            <span *ngIf="ofertaSeleccionada.tipo === 'Cumpleaños'">Cumpleaños/Serenata:</span>
+                                            <span *ngIf="ofertaSeleccionada.tipo === 'Boda'">Boda/Bautizo/Comunión:</span>
+                                            <span *ngIf="ofertaSeleccionada.tipo === 'DiaCompleto'">Día completo:</span>
+                                        </strong>        
+                                    </p>
+                                </div>
+
+                                <!-- Imagen y botones -->
+                                <div class="d-flex flex-column align-items-center ms-auto">
+                                    <img [src]="getFotoUrl(solicitud.idCharanga) || 'assets/perfil.png'" 
+                                        alt="Foto de solicitud" 
+                                        class="rounded-circle mb-3"
+                                        style="width: 80px; height: 80px; object-fit: cover;">
+                                    <button class="btn btn-primary mb-2" 
+                                            (click)="aceptarSolicitud(solicitud.idOferta, solicitud.idCharanga)">
+                                        Aceptar
+                                    </button>
+                                    <button class="btn btn-danger" 
+                                            (click)="rechazarSolicitud(solicitud.idOferta, solicitud.idCharanga)">
+                                        Rechazar
+                                    </button>
+                                </div>
+                            </div>
+                        </li>
+                    </ul>
+                </div>
+                <div *ngIf="solicitudesSinResponder.length === 0 && ofertaSeleccionada.contratada === 0" class="alert alert-info mt-3">
+                    No se han recibido solicitudes para esta oferta.
+                </div>
+            </div>
+
+        </div>
+
+    </div>
 
 </div>

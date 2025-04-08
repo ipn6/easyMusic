@@ -41,10 +41,8 @@ export class PerfilComponent implements OnInit {
     this.loadUser();
   }
 
-  getFotoUrl(id: number) {
-    if(`${this.apiUrl}/usuario/${id}/foto`){
-      this.fotoUrl = `${this.apiUrl}/usuario/${id}/foto`;
-    }
+  getFotoUrl(id: number): string {
+    return `${this.apiUrl}/usuario/${id}/foto`; 
   }
 
   loadUser() {
@@ -124,5 +122,7 @@ export class PerfilComponent implements OnInit {
       console.error('🚨 Error al actualizar perfil:', error);
     });
   }
+
+  
   
 }

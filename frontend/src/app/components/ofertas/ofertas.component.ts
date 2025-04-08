@@ -21,10 +21,16 @@ export class OfertasComponent {
   fechaInicioFiltro: string = '';
   fechaFinFiltro: string = '';
   filtroTipo: string = '';
+  solicitudesRecibidas: any[] = []; // Solicitudes recibidas
+  solicitudesSinResponder: any[] = []; // Solicitudes sin responder
+  solicitudAceptada: any = {}; // Solicitud aceptada
+  solicitudesUser: any[] = []; // Solicitudes del usuario
   ofertas: any[] = []; // Todos las ofertas
+  ofertaSeleccionada: any = {}; // Oferta seleccionada
   ofertasFiltradas: any[] = []; // Ofertas después del filtro
+  ofertasUsuario: any[] = []; // Ofertas del usuario
   nuevaOferta = { titulo: '', descripcion: '', idCliente:'', idCharanga:'', idProvincia: '', fechaInicio: '', 
-    fechaFin: '', direccion: '', tipo: '', contratada: '', valoracionCliente: '', valoracionCharanga: '' };
+    fechaFin: '', direccion: '', tipo: '', contratada: '', valoracionCliente: '', valoracionCharanga: '', };
   private apiUrl =  environment.apiUrl;
 
   constructor(private authService: AuthService, private http: HttpClient) {}
@@ -33,6 +39,7 @@ export class OfertasComponent {
     this.user = this.authService.getUser();
     this.obtenerOfertas();
     this.obtenerProvincias();
+    this.obtenerSolicitudesUsuario();
     const hoy = new Date().toISOString().split('T')[0];
     this.fechaInicioFiltro = hoy;
   }
@@ -43,6 +50,30 @@ export class OfertasComponent {
         this.provincias = data;
       },
       (error) => console.error('Error al cargar provincias', error)
+    );
+  }
+
+  obtenerSolicitudesUsuario(){
+    const idCharanga = this.user.idUsuario;
+    this.http.get<any[]>(`${this.apiUrl}/solicitudes_user`, { params: { idCharanga } }).subscribe(
+      (data) => {
+        this.solicitudesUser = data;
+      },
+      (error) => 
+        console.error("Error al obtener solicitudes:", error)
+    );
+  }
+
+  obtenerSolicitudesOferta(idOferta: number) {
+    this.http.get<any[]>(`${this.apiUrl}/solicitudes`, { params: { idOferta } }).subscribe(
+      (data) => {
+        console.log("Solicitudes de la oferta:", data);
+        this.solicitudesRecibidas = data;
+        this.solicitudesSinResponder = data.filter(solicitud => solicitud.estado === 'Pendiente');
+        this.solicitudAceptada = data.find(solicitud => solicitud.estado === 'Aceptada');
+      },
+      (error) => 
+        console.error("Error al obtener solicitudes:", error)
     );
   }
 
@@ -64,6 +95,7 @@ export class OfertasComponent {
       (data) => {
         console.log("Ofertas recibidas después de aplicar filtro:", data);
         this.ofertasFiltradas = data;
+        this.ofertasUsuario = data.filter(oferta => oferta.idUsuario === this.user.idUsuario);
       },
       (error) => {
         console.error("Error al obtener ofertas:", error);
@@ -83,4 +115,46 @@ export class OfertasComponent {
   getFotoUrl(id: number): string {
     return `${this.apiUrl}/usuario/${id}/foto`; 
   }
+
+  contieneOferta(idOferta: number): boolean {
+    console.log("Solicitudes del usuario:", this.solicitudesUser);
+    console.log("ID de la oferta:", idOferta);
+    return this.solicitudesUser.some(solicitud => solicitud.idOferta === idOferta);
+  }
+
+  esRechazada(idOferta: number): boolean {
+    return this.solicitudesUser.some(solicitud => solicitud.idOferta === idOferta && solicitud.estado === 'Rechazada');
+  }
+
+  interesarse(oferta: any) {
+    const ofertaData = { ...oferta, idCharanga: this.user.idUsuario };
+    this.http.post(`${this.apiUrl}/crear_solicitud`, ofertaData).subscribe(() => {
+      this.obtenerOfertas();
+      this.obtenerSolicitudesUsuario();
+    });
+  }
+
+  verOferta(oferta: any){
+    this.ofertaSeleccionada = oferta;
+    this.obtenerSolicitudesOferta(oferta.idOferta);
+  }
+
+  aceptarSolicitud(idOferta: number, idCharanga: number) {
+    this.http.post(`${this.apiUrl}/aceptar_solicitud`, { idOferta, idCharanga }).subscribe(() => {
+      this.obtenerSolicitudesOferta(idOferta);
+    });
+  }
+
+  rechazarSolicitud(idOferta: number, idCharanga: number) {
+    this.http.post(`${this.apiUrl}/rechazar_solicitud`, { idOferta, idCharanga }).subscribe(() => {
+      this.obtenerSolicitudesOferta(idOferta);
+    });
+  }
+
+  asignarValoracion(idOferta: number, idCharanga: number, valoracion: number, tipoActo: string) {
+    this.http.post(`${this.apiUrl}/asignar_valoracion`, { idOferta, idCharanga, valoracion, tipoActo }).subscribe(() => {
+      this.obtenerSolicitudesOferta(idOferta);
+    });
+  }
+  
 }

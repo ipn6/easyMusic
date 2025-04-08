@@ -3,7 +3,7 @@
     <div class="mb-3 text-center">
       <img [src]="previewUrl || 'assets/perfil.png' " alt="Foto de perfil"
            class="rounded-circle" style="width: 120px; height: 120px; object-fit: cover;">
-      <input type="file" class="form-control mt-2" (change)="onFileSelected($event)" accept="image/*">
+      <input type="file"  required class="form-control mt-2" (change)="onFileSelected($event)" accept="image/*">
     </div>
     <form #form="ngForm" (submit)="onSubmit()">
       <div class="mb-3">

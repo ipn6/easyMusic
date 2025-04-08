@@ -470,7 +470,7 @@ app.get("/ofertas", async (req, res) => {
     }
 
     let sql = `
-        SELECT o.idOferta, o.titulo, o.direccion, o.tipo, o.descripcion, o.fechaInicio, o.fechaFin,
+        SELECT o.idOferta, o.titulo, o.direccion, o.tipo, o.descripcion, o.fechaInicio, o.fechaFin, o.contratada,
                u.idUsuario, u.nombre, u.valoracionMedia, u.foto AS foto, 
                p.nombre AS provincia
         FROM ofertas o
@@ -534,6 +534,120 @@ app.post("/crear_oferta", async (req, res) => {
     } catch (error) {
         console.error("Error al crear oferta:", error);
         res.status(500).json({ error: "Error al crear oferta" });
+    }
+}
+);
+
+app.post('/crear_solicitud', async (req, res) => {
+    const { idOferta, idCharanga } = req.body;
+    
+    try {
+        const connection = await db.getConnection(); // Obtener una conexión del pool
+        await connection.beginTransaction();
+
+        const sql = "INSERT INTO solicitudes (idOferta, idCharanga) VALUES (?, ?)";
+        const [result] = await connection.query(sql, [idOferta, idCharanga]);
+
+        await connection.commit();
+        connection.release(); // Liberar conexión
+
+        res.json({ message: "Solicitud creada con éxito", idSolicitud: result.insertId });
+    } catch (error) {
+        console.error("Error al crear solicitud:", error);
+        res.status(500).json({ error: "Error al crear solicitud" });
+    }
+});
+
+app.get("/solicitudes", async (req, res) => {
+    const idOferta = req.query.idOferta;
+
+
+    
+        const sql = `
+            SELECT s.id, s.idOferta, s.idCharanga, s.estado, u.nombre, u.valoracionMedia, u.foto AS foto,
+            p.nombre AS provincia
+            FROM solicitudes s
+            JOIN charangas c ON s.idCharanga = c.idCharanga
+            JOIN usuarios u ON c.idCharanga = u.idUsuario
+            JOIN provincia p ON u.idProvincia = p.idProvincia
+            WHERE s.idOferta = ?
+        `;
+    
+        try {
+            const [rows] = await db.query(sql, [idOferta]);
+            res.json(rows);
+        }catch (error) {
+            console.error("Error al obtener solicitudes:", error);
+            res.status(500).json({ error: "Error al obtener solicitudes" });
+        }
+    }
+);
+
+app.get("/solicitudes_user", async (req, res) => {
+    const idCharanga = req.query.idCharanga;
+
+    
+        try {
+            const [rows] = await db.query("SELECT id, idOferta, estado FROM solicitudes WHERE idCharanga = ?", [idCharanga]);
+            res.json(rows);
+
+        }catch (error) {
+            console.error("Error al obtener solicitudes:", error);
+            res.status(500).json({ error: "Error al obtener solicitudes" });
+        }
+    }
+);
+
+app.post("/aceptar_solicitud", async (req, res) => {
+    const { idOferta, idCharanga} = req.body;
+
+    const sql = 'UPDATE ofertas set idCharanga = ?, contratada = 1 WHERE idOferta = ?';
+    const sql2 = 'UPDATE solicitudes SET estado = ? WHERE idOferta = ? AND idCharanga = ?';
+    const estado = "Aceptada";
+
+    try {
+        const connection = await db.getConnection(); // Obtener una conexión del pool
+        await connection.beginTransaction();
+
+        // Actualizar oferta
+        await connection.query(sql, [idCharanga, idOferta]);
+
+        // Actualizar solicitud
+        await connection.query(sql2, [estado, idOferta, idCharanga]);
+
+        await connection.commit();
+        connection.release(); // Liberar conexión
+
+        res.json({ message: "Solicitud aceptada con éxito" });
+    }
+    catch (error) {
+        console.error("Error al aceptar solicitud:", error);
+        res.status(500).json({ error: "Error al aceptar solicitud" });
+    }
+}
+);
+
+app.post("/rechazar_solicitud", async (req, res) => {
+    const { idOferta, idCharanga} = req.body;
+
+    const sql = 'UPDATE solicitudes SET estado = ? WHERE idOferta = ? AND idCharanga = ?';
+    const estado = "Rechazada";
+
+    try {
+        const connection = await db.getConnection(); // Obtener una conexión del pool
+        await connection.beginTransaction();
+
+        // Actualizar oferta
+        await connection.query(sql, [estado, idOferta, idCharanga]);
+
+        await connection.commit();
+        connection.release(); // Liberar conexión
+
+        res.json({ message: "Solicitud rechazada con éxito" });
+    }
+    catch (error) {
+        console.error("Error al rechazar solicitud:", error);
+        res.status(500).json({ error: "Error al rechazar solicitud" });
     }
 }
 );
