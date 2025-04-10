@@ -70,7 +70,8 @@ export class OfertasComponent {
         console.log("Solicitudes de la oferta:", data);
         this.solicitudesRecibidas = data;
         this.solicitudesSinResponder = data.filter(solicitud => solicitud.estado === 'Pendiente');
-        this.solicitudAceptada = data.find(solicitud => solicitud.estado === 'Aceptada');
+        this.solicitudAceptada = data.find(solicitud => solicitud.estado === 'Aceptada' || solicitud.estado === 'Valorada') ||
+          data.find(solicitud => solicitud.estado === 'Finalizada');
       },
       (error) => 
         console.error("Error al obtener solicitudes:", error)
@@ -96,6 +97,8 @@ export class OfertasComponent {
         console.log("Ofertas recibidas después de aplicar filtro:", data);
         this.ofertasFiltradas = data;
         this.ofertasUsuario = data.filter(oferta => oferta.idUsuario === this.user.idUsuario);
+        console.log("Ofertas filtradas:", this.ofertasFiltradas);
+        console.log("Ofertas del usuario:", this.ofertasUsuario);
       },
       (error) => {
         console.error("Error al obtener ofertas:", error);
@@ -117,13 +120,17 @@ export class OfertasComponent {
   }
 
   contieneOferta(idOferta: number): boolean {
-    console.log("Solicitudes del usuario:", this.solicitudesUser);
-    console.log("ID de la oferta:", idOferta);
+
     return this.solicitudesUser.some(solicitud => solicitud.idOferta === idOferta);
   }
 
   esRechazada(idOferta: number): boolean {
     return this.solicitudesUser.some(solicitud => solicitud.idOferta === idOferta && solicitud.estado === 'Rechazada');
+  }
+
+  esAceptada(idOferta: number): boolean {
+    return this.solicitudesUser.some(solicitud => solicitud.idOferta === idOferta && (solicitud.estado === 'Aceptada' || 
+      solicitud.estado === 'Valorada' || solicitud.estado === 'Finalizada'));
   }
 
   interesarse(oferta: any) {
@@ -136,24 +143,47 @@ export class OfertasComponent {
 
   verOferta(oferta: any){
     this.ofertaSeleccionada = oferta;
+    console.log("Oferta seleccionada:", this.ofertaSeleccionada);
     this.obtenerSolicitudesOferta(oferta.idOferta);
   }
 
   aceptarSolicitud(idOferta: number, idCharanga: number) {
     this.http.post(`${this.apiUrl}/aceptar_solicitud`, { idOferta, idCharanga }).subscribe(() => {
+      this.obtenerOfertas();
       this.obtenerSolicitudesOferta(idOferta);
     });
   }
 
   rechazarSolicitud(idOferta: number, idCharanga: number) {
     this.http.post(`${this.apiUrl}/rechazar_solicitud`, { idOferta, idCharanga }).subscribe(() => {
+      this.obtenerOfertas();
       this.obtenerSolicitudesOferta(idOferta);
     });
   }
 
-  asignarValoracion(idOferta: number, idCharanga: number, valoracion: number, tipoActo: string) {
-    this.http.post(`${this.apiUrl}/asignar_valoracion`, { idOferta, idCharanga, valoracion, tipoActo }).subscribe(() => {
+  asignarValoracionCharanga(idOferta: number, idCharanga: number, valoracion: number, tipoActo: string) {
+    console.log("Asignando valoración a la charanga:", idCharanga, "Valoración:", valoracion, "Tipo de acto:", tipoActo);
+    this.http.post(`${this.apiUrl}/asignar_valoracion_charanga`, { idOferta, idCharanga, valoracion, tipoActo }).subscribe(() => {
+      this.obtenerOfertas();
       this.obtenerSolicitudesOferta(idOferta);
+      this.setValoracionMedia(idCharanga, valoracion);
+    });
+  }
+
+  asignarValoracionCliente(idOferta: number, idCharanga: number, idUsuario: number, valoracion: number) {
+    console.log("Asignando valoración al cliente:", idUsuario, "Valoración:", valoracion);
+    this.http.post(`${this.apiUrl}/asignar_valoracion_cliente`, { idOferta, idCharanga, idUsuario, valoracion }).subscribe(() => {
+      this.obtenerOfertas();
+      this.obtenerSolicitudesOferta(idOferta);
+      this.setValoracionMedia(idUsuario, valoracion);
+    });
+  }
+
+  setValoracionMedia(idUsuario: number, valoracion: number) {
+    console.log("Asignando valoración media al usuario:", idUsuario, "Valoración media:", valoracion);
+    this.http.post(`${this.apiUrl}/setValoracionMedia`, { idUsuario, valoracion }).subscribe(() => {
+      console.log("Valoración media actualizada para el usuario:", idUsuario);
+      this.obtenerOfertas();
     });
   }
   

@@ -9,7 +9,7 @@ const fs = require('fs');
 const path = require('path');
 const app = express();
 const PORT = process.env.PORT || 3000;
-app.use(express.json());
+app.use(express.json({ limit: '10mb' }));
 app.use(cors());
 
 const storage = multer.memoryStorage();
@@ -100,13 +100,13 @@ app.post("/register", upload.single("foto"), async (req, res) => {
         }
 
         if(rol === "musico") {
-            user = { idUsuario: userId, nombre, email, telefono, rol, idProvincia, foto, valoracionMedia, biografia, 
+            user = { idUsuario: userId, nombre, email, telefono, rol, idProvincia, valoracionMedia, biografia, 
                 idMusico: userId, idInstrumento, nivelMusical, coche};
         }else if(rol === "charanga") {
-            user = { idUsuario: userId, nombre, email, telefono, rol, idProvincia, foto, valoracionMedia, biografia,
+            user = { idUsuario: userId, nombre, email, telefono, rol, idProvincia, valoracionMedia, biografia,
                 idCharanga: userId, fundacion };
         }else{
-            user = { idUsuario: userId, nombre, email, telefono, rol, idProvincia, foto, valoracionMedia, biografia, idCliente: userId };
+            user = { idUsuario: userId, nombre, email, telefono, rol, idProvincia, valoracionMedia, biografia, idCliente: userId };
         }
 
         const token = jwt.sign({ id: userId }, "secretkey", { expiresIn: "1h" });
@@ -152,7 +152,7 @@ app.post("/login", async (req, res) => {
             const sql2 = "SELECT * FROM musicos WHERE idMusico = ?";
             const [results2] = await db.query(sql2, [usuario.idUsuario]);
             user = {idUsuario: usuario.idUsuario, nombre: usuario.nombre, email: usuario.email, telefono: usuario.telefono, 
-                rol: usuario.rol, idProvincia: usuario.idProvincia, foto: usuario.foto, biografia: usuario.biografia, 
+                rol: usuario.rol, idProvincia: usuario.idProvincia, biografia: usuario.biografia, 
                 valoracionMedia: usuario.valoracionMedia, idMusico: results2[0].idMusico, 
                 idInstrumento: results2[0].idInstrumento, 
                 nivelMusical: results2[0].nivelMusical, coche: results2[0].coche};
@@ -161,14 +161,14 @@ app.post("/login", async (req, res) => {
             const sql2 = "SELECT * FROM clientes WHERE idCliente = ?";
             const [results2] = await db.query(sql2, [usuario.idUsuario]);
             user = {idUsuario: usuario.idUsuario, nombre: usuario.nombre, email: usuario.email, telefono: usuario.telefono, 
-                rol: usuario.rol, foto: usuario.foto, biografia: usuario.biografia, 
+                rol: usuario.rol, biografia: usuario.biografia, 
                 valoracionMedia: usuario.valoracionMedia, idProvincia: usuario.idProvincia, idCliente: results2[0].idCliente};
         }
         else if(usuario.rol === "charanga"){
             const sql2 = "SELECT * FROM charangas WHERE idCharanga = ?";
             const [results2] = await db.query(sql2, [usuario.idUsuario]);
             user = {idUsuario: usuario.idUsuario, nombre: usuario.nombre, email: usuario.email, telefono: usuario.telefono,
-                rol: usuario.rol, idProvincia: usuario.idProvincia, foto: usuario.foto, biografia: usuario.biografia, 
+                rol: usuario.rol, idProvincia: usuario.idProvincia, biografia: usuario.biografia, 
                 valoracionMedia: usuario.valoracionMedia, idCharanga: results2[0].idCharanga,
                 fundacion: results2[0].fundacion};
         }
@@ -241,7 +241,7 @@ app.post('/perfil', upload.single('foto'), async (req, res) => {
     let sql = 'UPDATE usuarios SET nombre=?, telefono=?, biografia=?';
     let params = [nombre, telefono, biografia];
   
-    if (password) {
+    if (password && password.trim() !== '') {
         const hashedPassword = await bcrypt.hash(password, 10);
         sql += ', password=?';
         params.push(hashedPassword);
@@ -260,9 +260,9 @@ app.post('/perfil', upload.single('foto'), async (req, res) => {
   
     try {
       await connection.beginTransaction();
-      const [result] = await connection.execute(sql, params); // ✅ Usar execute en lugar de query
+      const [result] = await connection.execute(sql, params); 
       await connection.commit();
-      console.log('✅ Usuario actualizado correctamente');
+      console.log('Usuario actualizado correctamente');
   
       res.json({ success: true, message: 'Perfil actualizado correctamente' });
     } catch (err) {
@@ -306,12 +306,12 @@ app.get("/anuncios_charangas", async (req, res) => {
     let { idProvincia, fechaInicio, fechaFin} = req.query;
 
     if (!fechaInicio) {
-        fechaInicio = new Date().toISOString().split('T')[0];  // Asigna hoy por defecto
+        fechaInicio = new Date().toISOString().split('T')[0];
     }
 
     let sql = `
         SELECT a.idAnuncio, a.titulo, a.descripcion, a.fechaInicio, a.fechaFin,
-               u.idUsuario, u.nombre, u.foto AS foto, u.valoracionMedia, 
+               u.idUsuario, u.nombre, u.valoracionMedia, 
                p.nombre AS provincia
         FROM anuncios a
         JOIN anuncios_charangas ac ON a.idAnuncio = ac.idAnuncio
@@ -360,7 +360,7 @@ app.get("/anuncios_musicos", async (req, res) => {
 
     let sql = `
         SELECT a.idAnuncio, a.titulo, a.descripcion, a.fechaInicio, a.fechaFin,
-               u.idUsuario, u.nombre, u.foto AS foto, u.valoracionMedia,
+               u.idUsuario, u.nombre, u.valoracionMedia,
                p.nombre AS provincia, m.idInstrumento
         FROM anuncios a
         JOIN anuncios_musicos am ON a.idAnuncio = am.idAnuncio
@@ -470,8 +470,9 @@ app.get("/ofertas", async (req, res) => {
     }
 
     let sql = `
-        SELECT o.idOferta, o.titulo, o.direccion, o.tipo, o.descripcion, o.fechaInicio, o.fechaFin, o.contratada,
-               u.idUsuario, u.nombre, u.valoracionMedia, u.foto AS foto, 
+        SELECT o.idOferta, o.titulo, o.direccion, o.tipo, o.descripcion, 
+        o.fechaInicio, o.fechaFin, o.contratada, o.valoracionCliente, o.valoracionCharanga,
+               u.idUsuario, u.nombre, u.valoracionMedia, 
                p.nombre AS provincia
         FROM ofertas o
         JOIN usuarios u ON o.idCliente = u.idUsuario
@@ -564,7 +565,7 @@ app.get("/solicitudes", async (req, res) => {
 
     
         const sql = `
-            SELECT s.id, s.idOferta, s.idCharanga, s.estado, u.nombre, u.valoracionMedia, u.foto AS foto,
+            SELECT s.id, s.idOferta, s.idCharanga, s.estado, u.nombre, u.valoracionMedia,
             p.nombre AS provincia
             FROM solicitudes s
             JOIN charangas c ON s.idCharanga = c.idCharanga
@@ -649,6 +650,109 @@ app.post("/rechazar_solicitud", async (req, res) => {
         console.error("Error al rechazar solicitud:", error);
         res.status(500).json({ error: "Error al rechazar solicitud" });
     }
+}
+);
+
+app.post("/asignar_valoracion_charanga", async (req, res) => {
+    const { idOferta, idCharanga, valoracion, tipoActo } = req.body;
+
+
+    const sql = 'UPDATE ofertas SET valoracionCharanga = ? WHERE idOferta = ?';
+    const sql2 = 'UPDATE solicitudes SET estado = ? WHERE idOferta = ? AND idCharanga = ?';
+    const sql3 = 'INSERT INTO valoraciones (idUsuario, puntuacion, tipoActo) VALUES (?, ?, ?)';
+    const estado = "Valorada";
+
+
+    try {
+        const connection = await db.getConnection(); // Obtener una conexión del pool
+        await connection.beginTransaction();
+
+        // Actualizar oferta
+        await connection.query(sql, [valoracion, idOferta]);
+
+        // Actualizar solicitud
+        await connection.query(sql2, [estado, idOferta, idCharanga]);
+
+        await connection.query(sql3, [idCharanga, valoracion, tipoActo]);
+
+        await connection.commit();
+        connection.release(); // Liberar conexión
+
+        res.json({ message: "Valoración asignada con éxito" });
+    }
+    catch (error) {
+        console.error("Error al asignar valoración a charanga:", error);
+        res.status(500).json({ error: "Error al asignar valoración a charanga" });
+    }
+}
+);
+
+app.post("/asignar_valoracion_cliente", async (req, res) => {
+    const { idOferta,  idCharanga, idUsuario, valoracion} = req.body;
+
+    console.log("Datos recibidos:", req.body);
+
+    const sql = 'UPDATE ofertas SET valoracionCliente = ? WHERE idOferta = ?';
+    const sql2 = 'UPDATE solicitudes SET estado = ? WHERE idOferta = ? AND idCharanga = ?';
+    const sql3 = 'INSERT INTO valoraciones (idUsuario, puntuacion) VALUES (?, ?)';
+    const estado = "Finalizada";
+
+
+    try {
+        const connection = await db.getConnection(); // Obtener una conexión del pool
+        await connection.beginTransaction();
+
+        // Actualizar oferta
+        await connection.query(sql, [valoracion, idOferta]);
+        await connection.query(sql2, [estado, idOferta, idCharanga]);
+
+        await connection.query(sql3, [idUsuario, valoracion]);
+
+        await connection.commit();
+        connection.release(); // Liberar conexión
+
+        res.json({ message: "Valoración asignada con éxito" });
+    }
+    catch (error) {
+        console.error("Error al asignar valoración a cliente:", error);
+        res.status(500).json({ error: "Error al asignar valoración a cliente" });
+    }
+}
+);
+
+app.post("/setValoracionMedia", async (req, res) => {
+    const { idUsuario, valoracion} = req.body;
+
+
+
+    //Busca todas las valoraciones de ese usuario y saca la media
+    //despues hace update de usuario.valoracionMedia con ese valor
+    const sql = 'SELECT puntuacion FROM valoraciones WHERE idUsuario = ?';
+    const sql2 = 'UPDATE usuarios SET valoracionMedia = ? WHERE idUsuario = ?';
+
+    try {
+        const connection = await db.getConnection(); // Obtener una conexión del pool
+        await connection.beginTransaction();
+
+        // Obtener la media de valoraciones
+        const [rows] = await connection.query(sql, [idUsuario]);
+
+        const media = rows.reduce((acc, row) => acc + row.puntuacion, 0) / rows.length || 0;
+
+
+        // Actualizar la valoración media del usuario
+        await connection.query(sql2, [media, idUsuario]);
+
+        await connection.commit();
+        connection.release(); // Liberar conexión
+
+        res.json({ message: "Valoración media actualizada con éxito", media });
+    }
+    catch (error) {
+        console.error("Error al actualizar valoración media:", error);
+        res.status(500).json({ error: "Error al actualizar valoración media" });
+    }
+
 }
 );
 

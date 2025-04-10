@@ -79,6 +79,8 @@
         </div>
     </div>
 
+
+
     <!-- Lista de ofertas para charangas-->
     <div *ngIf="ofertasFiltradas.length > 0 && user.rol === 'charanga'">
         <div *ngFor="let oferta of ofertasFiltradas" class="charanga-card card mb-3 shadow">
@@ -121,7 +123,11 @@
                 </p>
                 <p class="card-text"><strong>Provincia:</strong> {{ oferta.provincia }}</p>
                 <p class="card-text"><strong>Dirección:</strong> {{ oferta.direccion }}</p>
-                <div class="text-end">
+                <p *ngIf="esAceptada(oferta.idOferta)" class="card-text"><strong>Estado:</strong> 
+                    <span *ngIf="oferta.contratada === 1 && oferta.valoracionCliente == null"> Contratada</span>
+                    <span *ngIf="oferta.valoracionCliente != null"> Finalizada</span>
+                </p>
+                <div *ngIf="!esAceptada(oferta.idOferta)" class="text-end">
                     <button *ngIf="!esRechazada(oferta.idOferta)" 
                         class="btn" 
                         [ngClass]="contieneOferta(oferta.idOferta) ? 'btn-secondary' : 'btn-success'" 
@@ -135,15 +141,27 @@
                     </button>
                         
                 </div>
+                <div *ngIf="esAceptada(oferta.idOferta)" class="text-end">
+                    
+                    <button class="btn btn-success" (click)="verOferta(oferta)" data-bs-toggle="modal" data-bs-target="#verDetallesOferta" >
+                        Ver detalles
+                    </button>
+                </div>
             </div>
         </div>
     </div>
+
+    
   
    <!-- Mensaje si no hay anuncios -->
-   <div *ngIf="ofertasFiltradas.length === 0 && user.rol === 'charanga'" class="alert alert-warning text-center mt-3">
-    No se encontraron ofertas con los filtros seleccionados.
-  </div>
+    <div *ngIf="ofertasFiltradas.length === 0 && user.rol === 'charanga'" class="alert alert-warning text-center mt-3">
+        No se encontraron ofertas con los filtros seleccionados.
+    </div>
 
+    <!-- VIsta para el cliente-->
+
+
+    
     <!-- Lista de ofertas del cliente-->
     <div *ngIf="ofertasUsuario.length > 0 && user.rol === 'cliente'">
         <div *ngFor="let oferta of ofertasUsuario" class="charanga-card card mb-3 shadow">
@@ -186,6 +204,11 @@
                 </p>
                 <p class="card-text"><strong>Provincia:</strong> {{ oferta.provincia }}</p>
                 <p class="card-text"><strong>Dirección:</strong> {{ oferta.direccion }}</p>
+
+                <p class="card-text"><strong>Estado:</strong> 
+                    <span *ngIf="oferta.contratada === 0 && oferta.valoracionCharanga == null"> Sin contratar</span>
+                    <span *ngIf="oferta.contratada === 1 && oferta.valoracionCharanga == null"> Contratada</span>
+                    <span *ngIf="oferta.valoracionCharanga != null"> Finalizada</span>
         
                 <div class="text-end">
                     <button class="btn btn-primary" (click)="verOferta(oferta)" data-bs-toggle="modal" data-bs-target="#verDetallesOferta" >
@@ -196,9 +219,10 @@
         </div>
     </div>
 
+
    <!-- Mensaje si no hay anuncios -->
    <div *ngIf="ofertasUsuario.length === 0 && user.rol === 'cliente'" class="alert alert-warning text-center mt-3">
-    No se encontraron ofertas con los filtros seleccionados.
+        No se encontraron ofertas con los filtros seleccionados.
   </div>
   
     <!-- Aqui se muestran las solicitudes recibidas-->
@@ -237,21 +261,35 @@
                                     <p class="mb-1"><strong>Dirección:</strong> {{ ofertaSeleccionada.direccion }}</p>
                                     
                                     <!-- Línea separadora -->
-                                    <hr style="border-top: 1px solid black; margin: 10px 0;" />
+                                    <hr style="border-top: 1px solid black;" />
                                     
                                     <p class="mb-1"><strong>Charanga aceptada:</strong> {{ solicitudAceptada.nombre }}</p>
-                                    <!-- Mostrar valoración o asignar valoración -->
-                                    <div *ngIf="ofertaSeleccionada.valoracionCharanga === ''">
+                                    <!-- Mostrar valoración o asignar valoración a charanga-->
+                                    <div *ngIf="solicitudAceptada.estado === 'Aceptada' && user.rol === 'cliente'">
                                         <p class="mb-1"><strong>Valorar Charanga:</strong></p>
                                         <select class="form-select w-auto" [(ngModel)]="ofertaSeleccionada.valoracionCharanga">
                                             <option *ngFor="let valor of [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10]" [value]="valor">{{ valor }}</option>
                                         </select>
-                                        <button class="btn btn-success mt-2" (click)="asignarValoracion(ofertaSeleccionada.idOferta, solicitudAceptada.idCharanga, ofertaSeleccionada.valoracionCharanga, ofertaSeleccionada.tipo)">
+                                        <button class="btn btn-success mt-2" (click)="asignarValoracionCharanga(ofertaSeleccionada.idOferta, solicitudAceptada.idCharanga, ofertaSeleccionada.valoracionCharanga, ofertaSeleccionada.tipo)">
                                             Asignar valoración
                                         </button>
                                     </div>
-                                    <div *ngIf="ofertaSeleccionada.valoracionCharanga !== ''">
+                                    <div *ngIf="(solicitudAceptada.estado === 'Valorada' || solicitudAceptada.estado === 'Finalizada' ) && user.rol === 'cliente'">
                                         <p class="mb-1"><strong>Valoración asignada:</strong> {{ ofertaSeleccionada.valoracionCharanga }}</p>
+                                    </div>
+
+                                    <!-- Mostrar valoración o asignar valoración a cliente-->
+                                    <div *ngIf="solicitudAceptada.estado === 'Valorada' && user.rol === 'charanga'">
+                                        <p class="mb-1"><strong>Valorar Cliente:</strong></p>
+                                        <select class="form-select w-auto" [(ngModel)]="ofertaSeleccionada.valoracionCliente">
+                                            <option *ngFor="let valor2 of [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10]" [value]="valor2">{{ valor2 }}</option>
+                                        </select>
+                                        <button class="btn btn-success mt-2" (click)="asignarValoracionCliente(ofertaSeleccionada.idOferta, solicitudAceptada.idCharanga, ofertaSeleccionada.idUsuario, ofertaSeleccionada.valoracionCliente)">
+                                            Asignar valoración
+                                        </button>
+                                    </div>
+                                    <div *ngIf="solicitudAceptada.estado === 'Finalizada' && user.rol === 'charanga'">
+                                        <p class="mb-1"><strong>Valoración asignada al cliente:</strong> {{ ofertaSeleccionada.valoracionCliente }}</p>
                                     </div>
 
                                 </div>
@@ -320,4 +358,3 @@
 
     </div>
 
-</div>

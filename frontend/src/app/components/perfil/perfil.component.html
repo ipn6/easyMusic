@@ -15,7 +15,7 @@
         <p><strong>Rol:</strong> {{ user.rol }}</p>
         <p><strong>Provincia:</strong> {{ provincia }}</p>
         <p><strong>Biografía:</strong> {{ user.biografia || 'Sin biografía' }}</p>
-        <p><strong>Valoración media:</strong> {{ user.valoracionMedia }}</p>
+        
 
         <!-- Si es músico -->
         <div *ngIf="user.rol === 'musico'">
@@ -28,6 +28,8 @@
         <div *ngIf="user.rol === 'charanga'">
           <p><strong>Año de fundación:</strong> {{ user.fundacion }}</p>
         </div>
+
+        <p><strong>Valoración media:</strong> {{ user.valoracionMedia }}</p>
 
         <!-- Botón para abrir modal de edición -->
         <button class="btn btn-outline-primary ms-auto" data-bs-toggle="modal" data-bs-target="#editProfileModal">
