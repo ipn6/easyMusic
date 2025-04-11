@@ -472,7 +472,7 @@ app.get("/ofertas", async (req, res) => {
     let sql = `
         SELECT o.idOferta, o.titulo, o.direccion, o.tipo, o.descripcion, 
         o.fechaInicio, o.fechaFin, o.contratada, o.valoracionCliente, o.valoracionCharanga,
-               u.idUsuario, u.nombre, u.valoracionMedia, 
+               u.idUsuario, u.nombre, u.email, u.valoracionMedia, 
                p.nombre AS provincia
         FROM ofertas o
         JOIN usuarios u ON o.idCliente = u.idUsuario
@@ -690,7 +690,6 @@ app.post("/asignar_valoracion_charanga", async (req, res) => {
 app.post("/asignar_valoracion_cliente", async (req, res) => {
     const { idOferta,  idCharanga, idUsuario, valoracion} = req.body;
 
-    console.log("Datos recibidos:", req.body);
 
     const sql = 'UPDATE ofertas SET valoracionCliente = ? WHERE idOferta = ?';
     const sql2 = 'UPDATE solicitudes SET estado = ? WHERE idOferta = ? AND idCharanga = ?';
@@ -723,8 +722,6 @@ app.post("/asignar_valoracion_cliente", async (req, res) => {
 app.post("/setValoracionMedia", async (req, res) => {
     const { idUsuario, valoracion} = req.body;
 
-
-
     //Busca todas las valoraciones de ese usuario y saca la media
     //despues hace update de usuario.valoracionMedia con ese valor
     const sql = 'SELECT puntuacion FROM valoraciones WHERE idUsuario = ?';
@@ -755,6 +752,29 @@ app.post("/setValoracionMedia", async (req, res) => {
 
 }
 );
+
+app.get("/valoracionMediaTipoActo", async (req, res) => {
+    const { idUsuario, tipoActo } = req.query;
+  
+    const sql = 'SELECT puntuacion FROM valoraciones WHERE idUsuario = ? AND tipoActo = ?';
+  
+    try {
+      const connection = await db.getConnection();
+      const [rows] = await connection.query(sql, [idUsuario, tipoActo]);
+  
+      let media = 0.0;
+      if (rows.length > 0) {
+        media = rows.reduce((acc, row) => acc + row.puntuacion, 0) / rows.length;
+      }
+  
+      connection.release();
+      res.json({ message: "Valoración media de este tipo obtenida con éxito", media });
+      
+    } catch (error) {
+      console.error("Error al obtener valoración:", error);
+      res.status(500).json({ error: "Error al obtener valoración" });
+    }
+  });
 
 
 

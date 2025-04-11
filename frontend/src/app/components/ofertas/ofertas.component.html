@@ -88,6 +88,7 @@
             <div class="d-flex justify-content-between align-items-center p-3" style="position: relative;">
                 <div>
                     <h5 class="mb-1">{{ oferta.nombre }}</h5>
+                    <p class="mb-0"> {{oferta.email}} </p>
                     <p class="mb-0">
                         <strong>Valoración media:</strong> {{ oferta.valoracionMedia }}
                     </p>
@@ -169,6 +170,7 @@
             <div class="d-flex justify-content-between align-items-center p-3" style="position: relative;">
                 <div>
                     <h5 class="mb-1">{{ oferta.nombre }}</h5>
+                    <p class="mb-0"> {{oferta.email}} </p>
                     <p class="mb-0">
                         <strong>Valoración media:</strong> {{ oferta.valoracionMedia }}
                     </p>
@@ -268,7 +270,7 @@
                                     <div *ngIf="solicitudAceptada.estado === 'Aceptada' && user.rol === 'cliente'">
                                         <p class="mb-1"><strong>Valorar Charanga:</strong></p>
                                         <select class="form-select w-auto" [(ngModel)]="ofertaSeleccionada.valoracionCharanga">
-                                            <option *ngFor="let valor of [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10]" [value]="valor">{{ valor }}</option>
+                                            <option *ngFor="let valor of [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]" [value]="valor">{{ valor }}</option>
                                         </select>
                                         <button class="btn btn-success mt-2" (click)="asignarValoracionCharanga(ofertaSeleccionada.idOferta, solicitudAceptada.idCharanga, ofertaSeleccionada.valoracionCharanga, ofertaSeleccionada.tipo)">
                                             Asignar valoración
@@ -282,7 +284,7 @@
                                     <div *ngIf="solicitudAceptada.estado === 'Valorada' && user.rol === 'charanga'">
                                         <p class="mb-1"><strong>Valorar Cliente:</strong></p>
                                         <select class="form-select w-auto" [(ngModel)]="ofertaSeleccionada.valoracionCliente">
-                                            <option *ngFor="let valor2 of [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10]" [value]="valor2">{{ valor2 }}</option>
+                                            <option *ngFor="let valor2 of [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]" [value]="valor2">{{ valor2 }}</option>
                                         </select>
                                         <button class="btn btn-success mt-2" (click)="asignarValoracionCliente(ofertaSeleccionada.idOferta, solicitudAceptada.idCharanga, ofertaSeleccionada.idUsuario, ofertaSeleccionada.valoracionCliente)">
                                             Asignar valoración
@@ -316,7 +318,8 @@
                                 <div class="me-3">
                                     <p class="mb-1"><strong>Nombre:</strong> {{ solicitud.nombre }}</p>
                                     <p class="mb-1"><strong>Provincia:</strong> {{ solicitud.provincia}}</p>
-                                    <p class="mb-1"><strong>Valoración media:</strong> {{ solicitud.valoracionMedia }}</p>
+                                    <p *ngIf="solicitud.valoracionMedia > 0" class="mb-1"><strong>Valoración media:</strong> {{ solicitud.valoracionMedia }}</p>
+                                    <p *ngIf="solicitud.valoracionMedia == 0" class="mb-1"><strong>Valoración media:</strong> Sin valoraciones</p>
                                     <p class="mb-1">
                                         <strong>Valoración media en </strong>
                                         <strong>
@@ -326,7 +329,13 @@
                                             <span *ngIf="ofertaSeleccionada.tipo === 'Cumpleaños'">Cumpleaños/Serenata:</span>
                                             <span *ngIf="ofertaSeleccionada.tipo === 'Boda'">Boda/Bautizo/Comunión:</span>
                                             <span *ngIf="ofertaSeleccionada.tipo === 'DiaCompleto'">Día completo:</span>
-                                        </strong>        
+                                        </strong>
+                                        <span *ngIf="getValoracion(solicitud.idCharanga) > 0">
+                                            {{ getValoracion(solicitud.idCharanga) }}
+                                        </span>
+                                        <span *ngIf="getValoracion(solicitud.idCharanga) == 0">
+                                            Sin valoraciones
+                                        </span>
                                     </p>
                                 </div>
 

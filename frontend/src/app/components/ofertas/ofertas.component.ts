@@ -2,11 +2,17 @@ import { Component } from '@angular/core';
 import { environment } from '../../../environments/environment';
 import { AuthService } from '../../services/auth.service';
 import { HttpClient } from '@angular/common/http';
+import { forkJoin, map, Observable } from 'rxjs';
 
 
 interface Provincia {
   idProvincia: number;
   nombre: string;
+}
+
+interface ValoracionTipoActo{
+  idCharanga: number;
+  valoracion: number;
 }
 
 @Component({
@@ -29,6 +35,7 @@ export class OfertasComponent {
   ofertaSeleccionada: any = {}; // Oferta seleccionada
   ofertasFiltradas: any[] = []; // Ofertas después del filtro
   ofertasUsuario: any[] = []; // Ofertas del usuario
+  valoracionesTipoActo: ValoracionTipoActo[] = []; // Valoraciones por tipo de acto
   nuevaOferta = { titulo: '', descripcion: '', idCliente:'', idCharanga:'', idProvincia: '', fechaInicio: '', 
     fechaFin: '', direccion: '', tipo: '', contratada: '', valoracionCliente: '', valoracionCharanga: '', };
   private apiUrl =  environment.apiUrl;
@@ -75,6 +82,27 @@ export class OfertasComponent {
       },
       (error) => 
         console.error("Error al obtener solicitudes:", error)
+    );
+  }
+
+  obtenerValoracionesTipoActoSolicitud(idOferta: number, tipoOferta: string) {
+    this.http.get<any[]>(`${this.apiUrl}/solicitudes`, { params: { idOferta } }).subscribe(
+      (solicitudes) => {
+        const observables = solicitudes.map((solicitud) =>
+          this.getValoracionMediaTipoActo(solicitud.idCharanga, tipoOferta).pipe(
+            map(media => ({ idCharanga: solicitud.idCharanga, valoracion: media }))
+          )
+        );
+  
+        forkJoin(observables).subscribe(
+          (result: ValoracionTipoActo[]) => {
+            this.valoracionesTipoActo = result;
+            console.log("✅ Valoraciones cargadas:", this.valoracionesTipoActo);
+          },
+          (error) => console.error(" Error al cargar valoraciones:", error)
+        );
+      },
+      (error) => console.error("Error al obtener solicitudes:", error)
     );
   }
 
@@ -145,6 +173,7 @@ export class OfertasComponent {
     this.ofertaSeleccionada = oferta;
     console.log("Oferta seleccionada:", this.ofertaSeleccionada);
     this.obtenerSolicitudesOferta(oferta.idOferta);
+    this.obtenerValoracionesTipoActoSolicitud(oferta.idOferta, oferta.tipo);
   }
 
   aceptarSolicitud(idOferta: number, idCharanga: number) {
@@ -180,11 +209,21 @@ export class OfertasComponent {
   }
 
   setValoracionMedia(idUsuario: number, valoracion: number) {
-    console.log("Asignando valoración media al usuario:", idUsuario, "Valoración media:", valoracion);
     this.http.post(`${this.apiUrl}/setValoracionMedia`, { idUsuario, valoracion }).subscribe(() => {
-      console.log("Valoración media actualizada para el usuario:", idUsuario);
       this.obtenerOfertas();
     });
+  }
+
+  getValoracionMediaTipoActo(idUsuario: number, tipoActo: string): Observable<number> {
+    return this.http.get<{ media: number }>(`${this.apiUrl}/valoracionMediaTipoActo`, {
+      params: { idUsuario, tipoActo }
+    }).pipe(map(res => res.media));
+  }
+
+  getValoracion(idCharanga: number): number{
+    console.log("Valoraciones por tipo de acto:", this.valoracionesTipoActo);
+    const valoracion = this.valoracionesTipoActo.find(v => v.idCharanga === idCharanga);
+    return valoracion ? valoracion.valoracion : 0;
   }
   
 }
