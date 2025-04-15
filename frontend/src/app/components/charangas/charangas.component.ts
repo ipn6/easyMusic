@@ -23,6 +23,7 @@ export class CharangasComponent {
   fechaInicioFiltro: string = '';
   fechaFinFiltro: string = '';
   nuevoAnuncio = { titulo: '', descripcion: '', idProvincia: '', fechaInicio: '', fechaFin: '' };
+  mostrarFormulario: boolean = false;
 
 
   private apiUrl =  environment.apiUrl;

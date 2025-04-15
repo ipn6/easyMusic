@@ -226,17 +226,15 @@ app.get("/usuario/:id/foto", async (req, res) => {
 app.post('/perfil', upload.single('foto'), async (req, res) => {
   
     const userId = req.headers['user-id'];
-    console.log('🆔 ID del usuario:', userId);
+
   
     if (!userId) {
-      console.log('❌ Error: Falta el ID de usuario');
       return res.status(400).json({ error: 'ID de usuario requerido' });
     }
   
     const { nombre, telefono, biografia, password } = req.body;
     const foto = req.file ? req.file.buffer : null;
   
-    console.log('📩 Datos recibidos:', { nombre, telefono, biografia, password, foto: foto ? 'Foto recibida' : 'Sin foto' });
   
     let sql = 'UPDATE usuarios SET nombre=?, telefono=?, biografia=?';
     let params = [nombre, telefono, biografia];
@@ -253,8 +251,6 @@ app.post('/perfil', upload.single('foto'), async (req, res) => {
     sql += ' WHERE idUsuario=?';
     params.push(userId);
   
-    console.log('🛠 Query:', sql);
-    console.log('📌 Parámetros:', params);
   
     const connection = await db.getConnection(); // Obtener una conexión del pool
   
@@ -262,11 +258,10 @@ app.post('/perfil', upload.single('foto'), async (req, res) => {
       await connection.beginTransaction();
       const [result] = await connection.execute(sql, params); 
       await connection.commit();
-      console.log('Usuario actualizado correctamente');
   
       res.json({ success: true, message: 'Perfil actualizado correctamente' });
     } catch (err) {
-      console.error('🚨 Error en MySQL:', err);
+      console.error('Error en MySQL:', err);
       await connection.rollback();
       res.status(500).json({ error: 'Error en el servidor' });
     } finally {
@@ -775,6 +770,242 @@ app.get("/valoracionMediaTipoActo", async (req, res) => {
       res.status(500).json({ error: "Error al obtener valoración" });
     }
   });
+
+  app.post("/crear_acto", async (req, res) => {
+    const { idCharanga, titulo, tipo, descripcion, fechaInicio, fechaFin, idProvincia, musicos} = req.body;
+
+
+    try {
+        const connection = await db.getConnection(); // Obtener una conexión del pool
+
+        await connection.beginTransaction();
+
+        // Insertar acto
+        const sqlActo = "INSERT INTO actos (idCharanga, idProvincia, tipo, fechaInicio, fechaFin, titulo, descripcion) VALUES (?, ?, ?, ?, ?, ?, ?)";
+        
+    
+
+        const [result] = await connection.query(sqlActo, [idCharanga, idProvincia, tipo, fechaInicio, fechaFin, titulo, descripcion]);
+
+        const idActo = result.insertId;
+
+        for (const musico of musicos) {
+            const sqlMusicos = "INSERT INTO acto_instrumentos (idActo, idInstrumento, cantidad) VALUES (?, ?, ?)";
+            await connection.query(sqlMusicos, [idActo, musico.idInstrumento, musico.cantidad]);
+        }
+
+        await connection.commit();
+        connection.release(); // Liberar conexión
+
+        res.json({ message: "Acto creado con éxito", idActo });
+    } catch (error) {
+        console.error("Error al crear acto:", error);
+        res.status(500).json({ error: "Error al crear acto" });
+    }
+});
+
+app.get("/actos", async (req, res) => {
+    let { idProvincia, fechaInicio, fechaFin, idInstrumento, tipo} = req.query;
+
+    if (!fechaInicio) {
+        fechaInicio = new Date().toISOString().split('T')[0];  // Asigna hoy por defecto
+    }
+
+    let sql = `
+        SELECT a.idActo, a.idCharanga, a.titulo, a.descripcion, a.fechaInicio, a.fechaFin, a.tipo,
+               u.idUsuario, u.nombre, u.valoracionMedia,
+               p.nombre AS provincia,
+               i.nombre AS instrumento,
+               ai.idInstrumento, ai.cantidad
+        FROM actos a
+        JOIN acto_instrumentos ai ON a.idActo = ai.idActo
+        JOIN instrumentos i ON ai.idInstrumento = i.idInstrumento
+        JOIN usuarios u ON a.idCharanga = u.idUsuario
+        JOIN provincia p ON a.idProvincia = p.idProvincia
+    `;
+
+    let params = [];
+    let conditions = [];
+
+    if (idProvincia) {
+        conditions.push("a.idProvincia = ?");
+        params.push(idProvincia);
+    }
+
+    if (fechaInicio) {
+        conditions.push("a.fechaInicio >= ?");
+        params.push(fechaInicio);
+    }
+    if (fechaFin) {
+        conditions.push("a.fechaFin <= ?");
+        params.push(fechaFin);
+    }
+    if (tipo) {
+        conditions.push("a.tipo = ?");
+        params.push(tipo);
+    }
+    if (idInstrumento){
+        conditions.push("ai.idInstrumento = ?");
+        params.push(idInstrumento);
+    }
+
+    if (conditions.length > 0) {
+        sql += " WHERE " + conditions.join(" AND ");
+    }
+
+    try {
+        const [rows] = await db.query(sql, params);
+        const actosMap = new Map();
+
+        rows.forEach(row => {
+            if (!actosMap.has(row.idActo)) {
+                actosMap.set(row.idActo, {
+                    idActo: row.idActo,
+                    idCharanga: row.idCharanga,
+                    titulo: row.titulo,
+                    descripcion: row.descripcion,
+                    fechaInicio: row.fechaInicio,
+                    fechaFin: row.fechaFin,
+                    tipo: row.tipo,
+                    idUsuario: row.idUsuario,
+                    nombre: row.nombre,
+                    valoracionMedia: row.valoracionMedia,
+                    provincia: row.provincia,
+                    musicos: []
+                });
+            }
+
+            actosMap.get(row.idActo).musicos.push({
+                idInstrumento: row.idInstrumento,
+                instrumento: row.instrumento,
+                cantidad: row.cantidad
+            });
+        });
+
+        const actos = Array.from(actosMap.values());
+        res.json(actos); 
+    } catch (error) {
+        console.error("Error al obtener actos:", error);
+        res.status(500).json({ error: "Error al obtener actos" });
+    }
+}
+);
+
+app.post('/crear_solicitud_musico', async (req, res) => {
+    const { idActo, idMusico } = req.body;
+    
+    try {
+        const connection = await db.getConnection(); // Obtener una conexión del pool
+        await connection.beginTransaction();
+
+        const sql = "INSERT INTO solicitudes_musicos (idActo, idMusico) VALUES (?, ?)";
+        const [result] = await connection.query(sql, [idActo, idMusico]);
+
+        await connection.commit();
+        connection.release(); // Liberar conexión
+
+        res.json({ message: "Solicitud creada con éxito", idSolicitud: result.insertId });
+    } catch (error) {
+        console.error("Error al crear solicitud:", error);
+        res.status(500).json({ error: "Error al crear solicitud" });
+    }
+});
+
+app.get("/solicitudes_musico", async (req, res) => {
+    const idMusico = req.query.idMusico;
+
+    
+        try {
+            const [rows] = await db.query("SELECT id, idActo, estado FROM solicitudes_musicos WHERE idMusico = ?", [idMusico]);
+            res.json(rows);
+
+        }catch (error) {
+            console.error("Error al obtener solicitudes:", error);
+            res.status(500).json({ error: "Error al obtener solicitudes" });
+        }
+    }
+);
+
+app.get("/solicitudes_acto", async (req, res) => {
+    const idActo = req.query.idActo;
+
+
+    
+        const sql = `
+            SELECT s.id, s.idActo, s.idMusico, s.estado, u.nombre, u.valoracionMedia,
+            p.nombre AS provincia
+            FROM solicitudes_musicos s
+            JOIN musicos m ON s.idMusico = m.idMusico
+            JOIN usuarios u ON m.idMusico = u.idUsuario
+            JOIN provincia p ON u.idProvincia = p.idProvincia
+            WHERE s.idActo = ?
+        `;
+    
+        try {
+            const [rows] = await db.query(sql, [idActo]);
+            res.json(rows);
+        }catch (error) {
+            console.error("Error al obtener solicitudes:", error);
+            res.status(500).json({ error: "Error al obtener solicitudes" });
+        }
+    }
+);
+
+app.post("/aceptar_solicitud_musico", async (req, res) => {
+    const { idActo, idMusico} = req.body;
+
+    //const sql = 'UPDATE act set idCharanga = ?, contratada = 1 WHERE idOferta = ?';
+    const sql2 = 'UPDATE solicitudes_musicos SET estado = ? WHERE idActo = ? AND idMusico = ?';
+    const estado = "Aceptada";
+
+    try {
+        const connection = await db.getConnection(); // Obtener una conexión del pool
+        await connection.beginTransaction();
+
+        // Actualizar oferta
+        await connection.query(sql, [idMusico, idActo]);
+
+        // Actualizar solicitud
+        await connection.query(sql2, [estado, idActo, idMusico]);
+
+        await connection.commit();
+        connection.release(); // Liberar conexión
+
+        res.json({ message: "Solicitud aceptada con éxito" });
+    }
+    catch (error) {
+        console.error("Error al aceptar solicitud:", error);
+        res.status(500).json({ error: "Error al aceptar solicitud" });
+    }
+}
+);
+
+app.post("/rechazar_solicitud_musico", async (req, res) => {
+    const { idActo, idMusico} = req.body;
+
+    const sql = 'UPDATE solicitudes_musicos SET estado = ? WHERE idActo = ? AND idMusico = ?';
+    const estado = "Rechazada";
+
+    try {
+        const connection = await db.getConnection(); // Obtener una conexión del pool
+        await connection.beginTransaction();
+
+        // Actualizar oferta
+        await connection.query(sql, [estado, idActo, idMusico]);
+
+        await connection.commit();
+        connection.release(); // Liberar conexión
+
+        res.json({ message: "Solicitud rechazada con éxito" });
+    }
+    catch (error) {
+        console.error("Error al rechazar solicitud:", error);
+        res.status(500).json({ error: "Error al rechazar solicitud" });
+    }
+}
+);
+
+
 
 
 

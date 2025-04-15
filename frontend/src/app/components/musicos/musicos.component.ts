@@ -29,6 +29,7 @@ export class MusicosComponent {
   fechaInicioFiltro: string = '';
   fechaFinFiltro: string = '';
   nuevoAnuncio = { titulo: '', descripcion: '', idProvincia: '', fechaInicio: '', fechaFin: '' };
+  mostrarFormulario: boolean = false;
 
 
   private apiUrl =  environment.apiUrl;
@@ -92,6 +93,11 @@ export class MusicosComponent {
 
   getFotoUrl(id: number): string {
     return `${this.apiUrl}/usuario/${id}/foto`; 
+  }
+
+  getNombreInstrumento(idInstrumento: number): string{
+    const instrumento = this.instrumentos.find(i => i.idInstrumento === idInstrumento);
+    return instrumento ? instrumento.nombre : 'Desconocido';
   }
 
   crearAnuncio() {

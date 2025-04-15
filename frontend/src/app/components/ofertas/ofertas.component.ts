@@ -39,6 +39,7 @@ export class OfertasComponent {
   nuevaOferta = { titulo: '', descripcion: '', idCliente:'', idCharanga:'', idProvincia: '', fechaInicio: '', 
     fechaFin: '', direccion: '', tipo: '', contratada: '', valoracionCliente: '', valoracionCharanga: '', };
   private apiUrl =  environment.apiUrl;
+  mostrarFormulario: boolean = false;
 
   constructor(private authService: AuthService, private http: HttpClient) {}
     
@@ -74,7 +75,6 @@ export class OfertasComponent {
   obtenerSolicitudesOferta(idOferta: number) {
     this.http.get<any[]>(`${this.apiUrl}/solicitudes`, { params: { idOferta } }).subscribe(
       (data) => {
-        console.log("Solicitudes de la oferta:", data);
         this.solicitudesRecibidas = data;
         this.solicitudesSinResponder = data.filter(solicitud => solicitud.estado === 'Pendiente');
         this.solicitudAceptada = data.find(solicitud => solicitud.estado === 'Aceptada' || solicitud.estado === 'Valorada') ||
@@ -97,7 +97,6 @@ export class OfertasComponent {
         forkJoin(observables).subscribe(
           (result: ValoracionTipoActo[]) => {
             this.valoracionesTipoActo = result;
-            console.log("✅ Valoraciones cargadas:", this.valoracionesTipoActo);
           },
           (error) => console.error(" Error al cargar valoraciones:", error)
         );
@@ -122,11 +121,8 @@ export class OfertasComponent {
     }
     this.http.get<any[]>(`${this.apiUrl}/ofertas`, { params }).subscribe(
       (data) => {
-        console.log("Ofertas recibidas después de aplicar filtro:", data);
         this.ofertasFiltradas = data;
         this.ofertasUsuario = data.filter(oferta => oferta.idUsuario === this.user.idUsuario);
-        console.log("Ofertas filtradas:", this.ofertasFiltradas);
-        console.log("Ofertas del usuario:", this.ofertasUsuario);
       },
       (error) => {
         console.error("Error al obtener ofertas:", error);
@@ -171,7 +167,6 @@ export class OfertasComponent {
 
   verOferta(oferta: any){
     this.ofertaSeleccionada = oferta;
-    console.log("Oferta seleccionada:", this.ofertaSeleccionada);
     this.obtenerSolicitudesOferta(oferta.idOferta);
     this.obtenerValoracionesTipoActoSolicitud(oferta.idOferta, oferta.tipo);
   }
@@ -191,7 +186,6 @@ export class OfertasComponent {
   }
 
   asignarValoracionCharanga(idOferta: number, idCharanga: number, valoracion: number, tipoActo: string) {
-    console.log("Asignando valoración a la charanga:", idCharanga, "Valoración:", valoracion, "Tipo de acto:", tipoActo);
     this.http.post(`${this.apiUrl}/asignar_valoracion_charanga`, { idOferta, idCharanga, valoracion, tipoActo }).subscribe(() => {
       this.obtenerOfertas();
       this.obtenerSolicitudesOferta(idOferta);
@@ -200,7 +194,6 @@ export class OfertasComponent {
   }
 
   asignarValoracionCliente(idOferta: number, idCharanga: number, idUsuario: number, valoracion: number) {
-    console.log("Asignando valoración al cliente:", idUsuario, "Valoración:", valoracion);
     this.http.post(`${this.apiUrl}/asignar_valoracion_cliente`, { idOferta, idCharanga, idUsuario, valoracion }).subscribe(() => {
       this.obtenerOfertas();
       this.obtenerSolicitudesOferta(idOferta);
@@ -221,7 +214,6 @@ export class OfertasComponent {
   }
 
   getValoracion(idCharanga: number): number{
-    console.log("Valoraciones por tipo de acto:", this.valoracionesTipoActo);
     const valoracion = this.valoracionesTipoActo.find(v => v.idCharanga === idCharanga);
     return valoracion ? valoracion.valoracion : 0;
   }

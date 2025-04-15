@@ -3,10 +3,17 @@
     <h2 *ngIf="user.rol === 'charanga'" class="text-primary">Ofertas para charangas</h2>
     <h2 *ngIf="user.rol === 'cliente'" class="text-primary">Mis ofertas</h2>
 
+    <!-- Botón para mostrar el formulario -->
+    <div *ngIf="user.rol === 'cliente' && !mostrarFormulario">
+        <button class="btn btn-success mb-3" (click)="mostrarFormulario = true">Publicar nueva oferta</button>
+    </div>
 
     <!-- Sección Crear Oferta -->
-     <div *ngIf="user.rol === 'cliente'" class="card p-3 mb-4">
-        <h4> Crear oferta</h4>
+     <div *ngIf="user.rol === 'cliente'  && mostrarFormulario" class="card p-3 mb-4">
+        <div class="d-flex justify-content-between align-items-center mb-2">
+            <h4> Crear oferta</h4>
+            <button class="btn btn-sm btn-danger" (click)="mostrarFormulario = false">Cerrar</button>
+        </div>
         <div class="row">
             <div class="col-md-4 mb-2">
                 <input type="text" class="form-control" placeholder="Título" [(ngModel)]="nuevaOferta.titulo">
@@ -226,6 +233,7 @@
    <div *ngIf="ofertasUsuario.length === 0 && user.rol === 'cliente'" class="alert alert-warning text-center mt-3">
         No se encontraron ofertas con los filtros seleccionados.
   </div>
+</div>
   
     <!-- Aqui se muestran las solicitudes recibidas-->
     <div class="modal fade" id="verDetallesOferta" tabindex="-1" aria-labelledby="verDetallesOfertaLabel" aria-hidden="true">
