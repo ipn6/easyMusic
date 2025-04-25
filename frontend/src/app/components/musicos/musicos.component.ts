@@ -43,6 +43,10 @@ export class MusicosComponent {
     this.obtenerInstrumentos();
     const hoy = new Date().toISOString().split('T')[0];
     this.fechaInicioFiltro = hoy;
+    const dentroDeUnMes = new Date();
+    dentroDeUnMes.setMonth(dentroDeUnMes.getMonth() + 1);
+    this.fechaFinFiltro = dentroDeUnMes.toISOString().split('T')[0];
+    
   }
 
   obtenerAnuncios() {

@@ -13,13 +13,13 @@
         <p><strong>Email:</strong> {{ user.email }}</p>
         <p><strong>Teléfono:</strong> {{ user.telefono }}</p>
         <p><strong>Rol:</strong> {{ user.rol }}</p>
-        <p><strong>Provincia:</strong> {{ provincia }}</p>
-        <p><strong>Biografía:</strong> {{ user.biografia || 'Sin biografía' }}</p>
+        <p><strong>Provincia:</strong> {{ getNombreProvincia(user.idProvincia)}}</p>
+        <p><strong>Biografía:</strong> {{ user.biografia }}</p>
         
 
         <!-- Si es músico -->
         <div *ngIf="user.rol === 'musico'">
-          <p><strong>Instrumento:</strong> {{ instrumento }}</p>
+          <p><strong>Instrumento:</strong> {{ getNombreInstrumento(user.idInstrumento) }}</p>
           <p><strong>Nivel musical:</strong> {{ user.nivelMusical }}</p>
           <p><strong>Coche:</strong> {{ user.coche ? 'Sí' : 'No' }}</p>
         </div>

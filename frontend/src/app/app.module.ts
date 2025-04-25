@@ -14,6 +14,7 @@ import { HttpClientModule} from '@angular/common/http';
 import { OfertasComponent } from './components/ofertas/ofertas.component';
 import { MusicosComponent } from './components/musicos/musicos.component';
 import { ListadoCharangasComponent } from './components/listado-charangas/listado-charangas.component';
+import { ReactiveFormsModule } from '@angular/forms';
 
 @NgModule({
   declarations: [
@@ -33,6 +34,7 @@ import { ListadoCharangasComponent } from './components/listado-charangas/listad
     BrowserModule,
     AppRoutingModule,
     FormsModule,
+    ReactiveFormsModule,
     HttpClientModule
 
   ],

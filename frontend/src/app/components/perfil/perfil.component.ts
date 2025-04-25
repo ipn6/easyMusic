@@ -23,8 +23,6 @@ interface Instrumento {
 })
 export class PerfilComponent implements OnInit {
   user: any = {};
-  instrumento = '';
-  provincia = '';
   instrumentos: Instrumento[] = [];
   provincias: Provincia[] = [];
   newPassword: string = '';
@@ -38,42 +36,44 @@ export class PerfilComponent implements OnInit {
   }
 
   ngOnInit() {
-    this.loadUser();
+    this.user = this.authService.getUser();
+    this.cargarProvincias();
+    this.cargarInstrumentos();
   }
 
   getFotoUrl(id: number): string {
     return `${this.apiUrl}/usuario/${id}/foto`; 
   }
 
-  loadUser() {
-    this.user = this.authService.getUser();
-    this.getFotoUrl
-    console.log("Foto de perfil:", this.user.foto);
-
-    this.getInstrumento(this.user.idInstrumento);
-    this.getProvincia(this.user.idProvincia);
+  cargarProvincias() {
+    this.http.get<Provincia[]>(`${this.apiUrl}/provincias`).subscribe(
+      (data) => {
+        this.provincias = data;
+        console.log('Provincias cargadas:', this.provincias);
+      },
+      (error) => console.error('Error al cargar provincias', error)
+    );
   }
 
-  getInstrumento(id: number) {
+  // Método para cargar los instrumentos desde el servidor
+  cargarInstrumentos() {
     this.http.get<Instrumento[]>(`${this.apiUrl}/instrumentos`).subscribe(
       (data) => {
         this.instrumentos = data;
-        const instrumento = this.instrumentos.find(i => i.idInstrumento === id);
-        this.instrumento = instrumento ? instrumento.nombre : 'No disponible';
       },
       (error) => console.error('Error al cargar instrumentos', error)
     );
   }
 
-  getProvincia(id: number) {
-    this.http.get<Provincia[]>(`${this.apiUrl}/provincias`).subscribe(
-      (data) => {
-        this.provincias = data;
-        const provincia = this.provincias.find(p => p.idProvincia === id);
-        this.provincia = provincia ? provincia.nombre : 'No disponible';
-      },
-      (error) => console.error('Error al cargar provincias', error)
-    );
+  getNombreInstrumento(idInstrumento: string): string{
+    const instrumento = this.instrumentos.find(i => i.idInstrumento.toString() === idInstrumento);
+    return instrumento?.nombre ?? 'Desconocido';
+  }
+
+
+  getNombreProvincia(idProvincia: string): string{
+    const provincia = this.provincias.find(p => p.idProvincia.toString() === idProvincia);
+    return provincia?.nombre ?? 'Desconocido';
   }
 
   // Manejar selección de imagen

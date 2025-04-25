@@ -1,79 +1,157 @@
 <div class="container mb-3">
     <h2>Registro</h2>
-    <div class="mb-3 text-center">
-      <img [src]="previewUrl || 'assets/perfil.png' " alt="Foto de perfil"
-           class="rounded-circle" style="width: 120px; height: 120px; object-fit: cover;">
-      <input type="file"  required class="form-control mt-2" (change)="onFileSelected($event)" accept="image/*">
-    </div>
-    <form #form="ngForm" (submit)="onSubmit()">
-      <div class="mb-3">
-        <input type="text" class="form-control" placeholder="Nombre" required [(ngModel)]="user.nombre" name="nombre" >
+    <form [formGroup]="registerForm" (ngSubmit)="onSubmit()" novalidate>
+
+      <div class="mb-3 text-center">
+        <label class="form-label d-block">
+          Foto de perfil <span class="text-danger">*</span>
+        </label>
+        <img [src]="previewUrl || 'assets/perfil.png'" alt="Foto de perfil"
+          class="rounded-circle" style="width: 120px; height: 120px; object-fit: cover;">
+        <input type="file" class="form-control mt-2" (change)="onFileSelected($event)" accept="image/*" required>
       </div>
+
+        <!-- NOMBRE -->
       <div class="mb-3">
-        <input type="text" class="form-control" placeholder="Email" required [(ngModel)]="user.email" name="email" >
+        <label class="form-label">Nombre <span class="text-danger">*</span></label>
+        <input type="text" formControlName="nombre" class="form-control" placeholder="Nombre">
+        <div class="text-danger" *ngIf="registerForm.controls['nombre'].invalid && registerForm.controls['nombre'].touched">
+          El nombre es obligatorio.
+        </div>
       </div>
+        <!-- EMAIL -->
       <div class="mb-3">
-        <input type="password" class="form-control" placeholder="Contraseña" required [(ngModel)]="user.password" name="password" >
+        <label class="form-label">Email <span class="text-danger">*</span></label>
+        <input type="email" formControlName="email" class="form-control" placeholder="Correo electrónico">
+        <div class="text-danger" *ngIf="registerForm.controls['email'].invalid && registerForm.controls['email'].touched">
+          Introduce un email válido.
+        </div>
       </div>
-      <div class="mb-3">
-        <input type="password" class="form-control" placeholder="Confirmar contraseña" required [(ngModel)]="user.confirmPassword" name="confirmPassword" >
+
+      <!-- CONTRASEÑA -->
+      <div class="mb-3 position-relative">
+        <input
+          [type]="showPassword ? 'text' : 'password'" class="form-control" placeholder="Contraseña" formControlName="password">
+        <button type="button" class="btn btn-sm btn-outline-secondary position-absolute top-0 end-0 mt-1 me-1"
+                (click)="togglePasswordVisibility()">
+          <i class="bi" [ngClass]="showPassword ? 'bi-eye-slash' : 'bi-eye'"></i>
+        </button>
+        <div class="text-danger" *ngIf="registerForm.controls['password'].invalid && registerForm.controls['password'].touched">
+          La contraseña debe tener al menos 8 caracteres e incluir una mayúscula y un número.
+        </div>
       </div>
-      <div class="mb-3">
-        <input type="text" class="form-control" placeholder="Biografía" required [(ngModel)]="user.biografia" name="biografia">
+       <!-- CONFIRMAR CONTRASEÑA -->
+      <div class="mb-3 position-relative">
+        <input
+          [type]="showConfirmPassword ? 'text' : 'password'"
+          class="form-control"
+          placeholder="Confirmar contraseña"
+          formControlName="confirmPassword"
+        >
+        <button type="button" class="btn btn-sm btn-outline-secondary position-absolute top-0 end-0 mt-1 me-1"
+                (click)="toggleConfirmPasswordVisibility()">
+          <i class="bi" [ngClass]="showConfirmPassword ? 'bi-eye-slash' : 'bi-eye'"></i>
+        </button>
       </div>
+      <!-- MENSAJE DE ERROR SI NO COINCIDEN -->
+      <div *ngIf="registerForm.errors?.['passwordMismatch'] && registerForm.get('confirmPassword')?.touched" class="text-danger mb-3">
+        Las contraseñas no coinciden.
+      </div>
+       <!-- BIOGRAFÍA -->
       <div class="mb-3">
-        <input type="number" class="form-control" placeholder="Teléfono" required [(ngModel)]="user.telefono" name="telefono">
+        <label class="form-label">Biografía <span class="text-danger">*</span></label>
+        <textarea formControlName="biografia" class="form-control" placeholder="Describe algo sobre ti..."></textarea>
+        <div class="text-danger" *ngIf="registerForm.controls['biografia'].invalid && registerForm.controls['biografia'].touched">
+          Introduce tu biografía.
+        </div>
+      </div>
+       <!-- TELÉFONO -->
+      <div class="mb-3">
+        <label class="form-label">Teléfono <span class="text-danger">*</span></label>
+        <input type="tel" formControlName="telefono" class="form-control" placeholder="Ej: 666555444">
+        <div class="text-danger" *ngIf="registerForm.controls['telefono'].invalid && registerForm.controls['telefono'].touched">
+          Introduce un número de teléfono válido.
+        </div>
       </div>
 
       <div class="mb-3">
-        <select input type="number" class="form-select" [(ngModel)]="user.idProvincia" name="idProvincia" required>
-          <option value="null"disabled selected>Selecciona una provincia</option>
-          <option *ngFor="let provincia of provincias" [ngValue]="provincia.idProvincia">{{ provincia.nombre }}</option>
+        <label class="form-label">Provincia <span class="text-danger">*</span></label>
+        <select class="form-select" formControlName="idProvincia">
+          <option value="" disabled selected>Selecciona una provincia</option>
+          <option *ngFor="let provincia of provincias" [value]="provincia.idProvincia">
+            {{ provincia.nombre }}
+          </option>
         </select>
+        <div class="text-danger" *ngIf="registerForm.controls['idProvincia'].invalid && registerForm.controls['idProvincia'].touched">
+          Selecciona una provincia.
+        </div>
       </div>
     
+
+        <!-- ROL -->
       <div class="mb-3">
-        <select class="form-select" [(ngModel)]="user.rol" name="rol" required>
+        <label class="form-label">Rol <span class="text-danger">*</span></label>
+        <select class="form-select" formControlName="rol">
           <option value="" disabled selected>Selecciona un rol</option>
-            <option value="musico">Músico</option>
+          <option value="musico">Músico</option>
             <option value="charanga">Charanga</option>
             <option value="cliente">Cliente</option>
         </select>
+        <div class="text-danger" *ngIf="registerForm.controls['rol'].invalid && registerForm.controls['rol'].touched">
+          Selecciona un rol.
+        </div>
       </div>
-
-         <!-- Si el usuario elige Músico -->
-      <div *ngIf="user.rol === 'musico'">
-        <div class="mb-3">
-          <select class="form-select" [(ngModel)]="user.idInstrumento" name="idInstrumento" required>
-            <option value="null" disabled>Selecciona tu instrumento</option>
-            <option *ngFor="let instrumento of instrumentos" [ngValue]="instrumento.idInstrumento">{{ instrumento.nombre }}</option>
-          </select>
-        </div>
-
-        <div class="mb-3">
-          <select class="form-select" [(ngModel)]="user.nivelMusical" name="nivelMusical" required>
-              <option value="" disabled selected>Selecciona tu nivel musical</option>
-              <option value="Sin estudios">Sin estudios</option>
-              <option value="Grado elemental">Grado elemental</option>
-              <option value="Grado profesional">Grado profesional</option>
-              <option value="Grado superior">Grado superior</option>
-          </select>
-        </div>
-
-        <div class="mb-3">
-          <label class="mt-2">
-            ¿Tienes coche? <input type="checkbox" [(ngModel)]="user.coche" name="coche"> 
-          </label>
+      
+    <!-- Si el usuario elige Músico -->
+    <div *ngIf="registerForm.get('rol')?.value === 'musico'">
+      <div class="mb-3">
+        <label class="form-label">Instrumento <span class="text-danger">*</span></label>
+        <select class="form-select" formControlName="idInstrumento" required>
+          <option value="" disabled>Selecciona tu instrumento</option>
+          <option *ngFor="let instrumento of instrumentos" [value]="instrumento.idInstrumento">
+            {{ instrumento.nombre }}
+          </option>
+        </select>
+        <div *ngIf="registerForm.get('idInstrumento')?.invalid && registerForm.get('idInstrumento')?.touched" class="text-danger">
+          Este campo es obligatorio.
         </div>
       </div>
 
-      <!-- Si el usuario elige Charanga -->
-      <div *ngIf="user.rol === 'charanga'">
-        <div class="mb-3">
-          <input type="number" class="form-control" placeholder="Año de fundación" required [(ngModel)]="user.fundacion" name="fundacion" >
+      <div class="mb-3">
+        <label class="form-label">Estudios musicales <span class="text-danger">*</span></label>
+        <select class="form-select" formControlName="nivelMusical" required>
+          <option value="" disabled>Selecciona tus estudios musicales</option>
+          <option value="Sin estudios">Sin estudios</option>
+          <option value="Grado elemental">Grado elemental</option>
+          <option value="Grado profesional">Grado profesional</option>
+          <option value="Grado superior">Grado superior</option>
+        </select>
+        <div *ngIf="registerForm.get('nivelMusical')?.invalid && registerForm.get('nivelMusical')?.touched" class="text-danger">
+          Este campo es obligatorio.
         </div>
       </div>
-      <button type="submit" class="btn btn-primary w-100" [disabled]="!form.valid" >Registrarse</button>
+
+      <div class="mb-3 form-check">
+        <input type="checkbox" class="form-check-input" formControlName="coche" id="cocheCheck">
+        <label for="cocheCheck" class="form-check-label">¿Tienes coche?</label>
+      </div>
+    </div>
+
+    <!-- Si el usuario elige Charanga -->
+    <div *ngIf="registerForm.get('rol')?.value === 'charanga'">
+      <div class="mb-3">
+        <label class="form-label">Año de fundación <span class="text-danger">*</span></label>
+        <input type="number" class="form-control" formControlName="fundacion" placeholder="Año de fundación" required>
+        <div *ngIf="registerForm.get('fundacion')?.invalid && registerForm.get('fundacion')?.touched" class="text-danger">
+          Introduce un año válido.
+        </div>
+      </div>
+    </div>
+
+      <!-- BOTÓN -->
+    <button class="btn btn-primary w-100" type="submit" [disabled]="registerForm.invalid">
+      Registrarse
+    </button>
     </form>
   </div>
   

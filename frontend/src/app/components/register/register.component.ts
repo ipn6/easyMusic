@@ -1,8 +1,9 @@
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { AuthService } from '../../services/auth.service';
 import { Router } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
 import { environment } from '../../../environments/environment';
+import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 
 interface Provincia {
   idProvincia: number;
@@ -18,7 +19,7 @@ interface Instrumento{
   selector: 'app-register',
   templateUrl: './register.component.html',
 })
-export class RegisterComponent {
+export class RegisterComponent implements OnInit{
   user = { nombre: '', email: '', password: '', confirmPassword: '', biografia: '', telefono: '', rol: '', idProvincia: null,
     idInstrumento: null, nivelMusical: '', coche: '0', fundacion: ''
    };
@@ -28,20 +29,87 @@ export class RegisterComponent {
   private apiUrl =  environment.apiUrl;
   previewUrl: string | ArrayBuffer | null = null;
   selectedFile: File | null = null;
+  registerForm!: FormGroup;
+  showPassword = false;
+  showConfirmPassword = false;
 
 
+  constructor(private authService: AuthService, private http: HttpClient,
+     private router: Router, private fb: FormBuilder) {}
 
-  constructor(private authService: AuthService, private http: HttpClient, private router: Router) {}
+  
+  
+
+  ngOnInit(): void{
+    this.registerForm = this.fb.group({
+      nombre: ['', Validators.required],
+      email: ['', [Validators.required, Validators.email]],
+      password: ['', [
+        Validators.required,
+        Validators.minLength(8),
+        Validators.pattern(/^(?=.*[A-Z])(?=.*\d).{8,}$/) // al menos una mayúscula y un numero
+      ]],
+      confirmPassword: ['', Validators.required],
+      biografia: ['', Validators.required],
+      telefono: ['', [
+        Validators.required,
+        Validators.pattern(/^\d{9}$/)  // Asume un teléfono español sin prefijo
+      ]],
+      idProvincia: ['', Validators.required],
+      idInstrumento: ['', Validators.required],
+      rol: ['', Validators.required],
+      nivelMusical: [''],
+      coche: ['0'],
+      fundacion: ['']
+    }, {
+      validators: [this.passwordsMatchValidator]
+    });
+
+    this.registerForm.get('rol')?.valueChanges.subscribe((rol) => {
+      const idInstrumento = this.registerForm.get('idInstrumento');
+      const nivelMusical = this.registerForm.get('nivelMusical');
+      const coche = this.registerForm.get('coche');
+      const fundacion = this.registerForm.get('fundacion');
+
+      if (rol === 'musico') {
+        idInstrumento?.setValidators([Validators.required]);
+        nivelMusical?.setValidators([Validators.required]);
+        coche?.setValidators([Validators.requiredTrue]); // checkbox como requerido
+        fundacion?.clearValidators();
+      } else if (rol === 'charanga') {
+        fundacion?.setValidators([Validators.required]);
+        idInstrumento?.clearValidators();
+        nivelMusical?.clearValidators();
+        coche?.clearValidators();
+      } else {
+        idInstrumento?.clearValidators();
+        nivelMusical?.clearValidators();
+        coche?.clearValidators();
+        fundacion?.clearValidators();
+      }
+
+      // Actualizamos validaciones
+      idInstrumento?.updateValueAndValidity();
+      nivelMusical?.updateValueAndValidity();
+      coche?.updateValueAndValidity();
+      fundacion?.updateValueAndValidity();
+    });
+
+    this.cargarProvincias();
+    this.cargarInstrumentos();
+  }
 
   onSubmit() {
-    const formData = new FormData();
+    if (this.registerForm.invalid) {
+      this.registerForm.markAllAsTouched();
+      return;
+    }
   
     // Añadir todos los campos de texto
-    for (const key in this.user) {
-      if (this.user.hasOwnProperty(key)) {
-        formData.append(key, (this.user as any)[key]);
-      }
-    }
+    const formData = new FormData();
+    Object.entries(this.registerForm.value).forEach(([key, value]) => {
+      formData.append(key, value as string);
+    });
   
     // Añadir la imagen si se ha seleccionado
     if (this.selectedFile) {
@@ -59,11 +127,11 @@ export class RegisterComponent {
       err => alert("Error en el registro")
     );
   }
-  
 
-  ngOnInit(){
-    this.cargarProvincias();
-    this.cargarInstrumentos();
+  passwordsMatchValidator(form: FormGroup): { [key: string]: boolean } | null {
+    const password = form.get('password')?.value;
+    const confirmPassword = form.get('confirmPassword')?.value;
+    return password === confirmPassword ? null : { passwordMismatch: true };
   }
 
   onFileSelected(event: any): void {
@@ -95,6 +163,14 @@ export class RegisterComponent {
       },
       (error) => console.error('Error al cargar instrumentos', error)
     );
+  }
+
+  togglePasswordVisibility(): void {
+    this.showPassword = !this.showPassword;
+  }
+
+  toggleConfirmPasswordVisibility(): void {
+    this.showConfirmPassword = !this.showConfirmPassword;
   }
 
 }
