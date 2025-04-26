@@ -65,15 +65,15 @@ export class PerfilComponent implements OnInit {
     );
   }
 
-  getNombreInstrumento(idInstrumento: string): string{
-    const instrumento = this.instrumentos.find(i => i.idInstrumento.toString() === idInstrumento);
-    return instrumento?.nombre ?? 'Desconocido';
+  getNombreInstrumento(idInstrumento: number): string {
+    const instrumento = this.instrumentos.find(i => i.idInstrumento === idInstrumento);
+    return instrumento ? instrumento.nombre : 'Desconocido';
   }
 
 
-  getNombreProvincia(idProvincia: string): string{
-    const provincia = this.provincias.find(p => p.idProvincia.toString() === idProvincia);
-    return provincia?.nombre ?? 'Desconocido';
+  getNombreProvincia(idProvincia: number): string {
+    const provincia = this.provincias.find(p => p.idProvincia === idProvincia);
+    return provincia ? provincia.nombre : 'Desconocida';
   }
 
   // Manejar selección de imagen

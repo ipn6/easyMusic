@@ -2,7 +2,21 @@
   <h2>Iniciar sesión</h2>
   <form (submit)="onSubmit()">
     <input type="email" class="form-control" placeholder="Email" [(ngModel)]="credentials.email" name="email" required>
-    <input type="password" class="form-control mt-2" placeholder="Contraseña" [(ngModel)]="credentials.password" name="password" required>
+    <div class="mb-3 position-relative">
+      <input [type]="showPassword ? 'text' : 'password'" class="form-control mt-2" placeholder="Contraseña" [(ngModel)]="credentials.password" name="password" required>
+      <button type="button" class="btn btn-sm btn-outline-secondary position-absolute top-0 end-0 mt-1 me-1"
+              (click)="togglePasswordVisibility()">
+        <i class="bi" [ngClass]="showPassword ? 'bi-eye-slash' : 'bi-eye'"></i>
+      </button>
+    </div>
+    
+
+    <div class="mb-3">
+      <p class="text-center">¿No tienes cuenta? 
+        <a (click)="goRegister()" class="text-primary text-decoration-underline" style="cursor: pointer;">Regístrate</a>
+      </p>
+    </div>
+    
     <button class="btn btn-primary mt-3">Ingresar</button>
   </form>
 </div>

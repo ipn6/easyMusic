@@ -8,6 +8,8 @@ import { Router } from '@angular/router';
 })
 export class LoginComponent {
   credentials = { email: '', password: '' };
+  showPassword = false;
+  
 
   constructor(private authService: AuthService, private router: Router) {}
 
@@ -18,6 +20,14 @@ export class LoginComponent {
       localStorage.setItem("user", JSON.stringify(res.user));
       this.router.navigate(['/perfil']);
     }, err => alert("Credenciales incorrectas"));
+  }
+
+  togglePasswordVisibility(): void {
+    this.showPassword = !this.showPassword;
+  }
+
+  goRegister(){
+    this.router.navigate(['/register']);
   }
 
 }

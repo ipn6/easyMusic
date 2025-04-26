@@ -49,7 +49,7 @@ async function testDB() {
 testDB();
 
 app.post("/register", upload.single("foto"), async (req, res) => {
-    const { nombre, email, password, confirmPassword, biografia, telefono, rol, idProvincia, idInstrumento, nivelMusical, coche, fundacion } = req.body;
+    let { nombre, email, password, confirmPassword, biografia, telefono, rol, idProvincia, idInstrumento, nivelMusical, coche, fundacion } = req.body;
 
     if (password !== confirmPassword) {
         return res.status(400).json({ error: "Las contraseñas no coinciden" });
@@ -74,6 +74,10 @@ app.post("/register", upload.single("foto"), async (req, res) => {
         }else{
             coche2 = 1;
         }
+
+        //convierte idProvincia y idInstrumento de String a Int
+        idProvincia = parseInt(idProvincia, 10);
+        idInstrumento = parseInt(idInstrumento, 10);
 
         // Insertar en clientes, musicos o charangas
         if(rol === "cliente") {
