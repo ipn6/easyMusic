@@ -74,7 +74,6 @@ export class RegisterComponent implements OnInit{
       if (rol === 'musico') {
         idInstrumento?.setValidators([Validators.required]);
         nivelMusical?.setValidators([Validators.required]);
-        coche?.setValidators([Validators.requiredTrue]); // checkbox como requerido
         fundacion?.clearValidators();
       } else if (rol === 'charanga') {
         fundacion?.setValidators([Validators.required]);

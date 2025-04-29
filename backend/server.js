@@ -7,6 +7,8 @@ const jwt = require("jsonwebtoken");
 const multer = require('multer');
 const fs = require('fs');
 const path = require('path');
+const nodemailer = require('nodemailer');
+const { send } = require("process");
 const app = express();
 const PORT = process.env.PORT || 3000;
 app.use(express.json({ limit: '10mb' }));
@@ -47,6 +49,45 @@ async function testDB() {
 }
 
 testDB();
+
+const transporter = nodemailer.createTransport({
+    service: 'gmail',
+    auth: {
+      user: 'ipn6@gcloud.ua.es',         // Tu correo
+      pass: 'xdka tham sbdw clif'        // Tu contraseña o App Password (más seguro)
+    }
+  });
+
+async function sendEmail(to, subject, text) {
+    const mailOptions = {
+        from: 'ipn6@gcloud.ua.es',
+        to: to,
+        subject: subject,
+        html: `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: auto; padding: 20px; border: 1px solid #ddd; border-radius: 10px;">
+          <div style="text-align: center;">
+            <h2 style="color:rgb(0, 221, 255);">🎶 EasyMusic 🎺</h2>
+          </div>
+          <hr style="border: none; border-top: 2px solid rgb(0, 221, 255); margin: 20px 0;">
+          <div style="font-size: 16px; color: #333;">
+            <p>${text}</p>
+          </div>
+          <hr style="border: none; border-top: 1px solid #ddd; margin: 20px 0;">
+          <div style="text-align: center; font-size: 12px; color: #777;">
+            <p>Este correo fue enviado automáticamente desde EasyMusic.</p>
+            <p>http://victorious-stone-011abec10.6.azurestaticapps.net</p>
+          </div>
+        </div>
+         `
+      
+    };
+
+    try{
+        await transporter.sendMail(mailOptions);
+    }catch(error){
+        console.error('Error al enviar el email:', error);
+    }
+}
 
 app.post("/register", upload.single("foto"), async (req, res) => {
     let { nombre, email, password, confirmPassword, biografia, telefono, rol, idProvincia, idInstrumento, nivelMusical, coche, fundacion } = req.body;
@@ -112,6 +153,9 @@ app.post("/register", upload.single("foto"), async (req, res) => {
         }else{
             user = { idUsuario: userId, nombre, email, telefono, rol, idProvincia, valoracionMedia, biografia, idCliente: userId };
         }
+        
+        
+        await sendEmail(email, "Bienvenido a EasyMusic", "Hola " + user.nombre + ", bienvenido a EasyMusic. Te has registrado con éxito en nuestra web.");
 
         const token = jwt.sign({ id: userId }, "secretkey", { expiresIn: "1h" });
 
@@ -177,9 +221,10 @@ app.post("/login", async (req, res) => {
                 fundacion: results2[0].fundacion};
         }
 
-
+       
         // Generar token JWT
         const token = jwt.sign({ id: user.idUsuario }, "secretkey", { expiresIn: "1h" });
+
         res.json({ message: "Inicio de sesión exitoso", token, user });
 
     } catch (error) {
@@ -471,7 +516,7 @@ app.get("/ofertas", async (req, res) => {
     let sql = `
         SELECT o.idOferta, o.titulo, o.direccion, o.tipo, o.descripcion, 
         o.fechaInicio, o.fechaFin, o.contratada, o.valoracionCliente, o.valoracionCharanga,
-               u.idUsuario, u.nombre, u.email, u.valoracionMedia, 
+               u.idUsuario, u.nombre, u.email, u.valoracionMedia, u.telefono, 
                p.nombre AS provincia
         FROM ofertas o
         JOIN usuarios u ON o.idCliente = u.idUsuario
@@ -564,7 +609,7 @@ app.get("/solicitudes", async (req, res) => {
 
     
         const sql = `
-            SELECT s.id, s.idOferta, s.idCharanga, s.estado, u.nombre, u.valoracionMedia,
+            SELECT s.id, s.idOferta, s.idCharanga, s.estado, u.nombre, u.valoracionMedia, u.email, u.telefono,
             p.nombre AS provincia
             FROM solicitudes s
             JOIN charangas c ON s.idCharanga = c.idCharanga
@@ -605,6 +650,14 @@ app.post("/aceptar_solicitud", async (req, res) => {
     const sql2 = 'UPDATE solicitudes SET estado = ? WHERE idOferta = ? AND idCharanga = ?';
     const estado = "Aceptada";
 
+    //Rechaza las demas solicitudes de esa oferta
+    const sql3 = 'UPDATE solicitudes SET estado = ? WHERE idOferta = ? AND idCharanga != ?';
+    const estado2 = "Rechazada";
+
+    const tituloOferta = 'SELECT titulo FROM ofertas WHERE idOferta = ?';
+    const emailCharanga = 'SELECT email FROM usuarios WHERE idUsuario = ?';
+
+
     try {
         const connection = await db.getConnection(); // Obtener una conexión del pool
         await connection.beginTransaction();
@@ -615,8 +668,24 @@ app.post("/aceptar_solicitud", async (req, res) => {
         // Actualizar solicitud
         await connection.query(sql2, [estado, idOferta, idCharanga]);
 
+        // Rechazar otras solicitudes
+        await connection.query(sql3, [estado2, idOferta, idCharanga]);
+
+        // Obtener el título de la oferta
+        const [rows] = await connection.query(tituloOferta, [idOferta]);
+        const oferta = rows[0].titulo;
+
+        // Obtener el email de la charanga
+        const [rows2] = await connection.query(emailCharanga, [idCharanga]);
+        const email = rows2[0].email;
+
         await connection.commit();
         connection.release(); // Liberar conexión
+
+        // Enviar email a la charanga
+        await sendEmail(email, "Solicitud aceptada", `¡Enhorabuena! Tu solicitud para la oferta "${oferta}" ha sido aceptada. 
+            Inicia sesión para conocer los datos de contacto del cliente. 
+            https://victorious-stone-011abec10.6.azurestaticapps.net`);
 
         res.json({ message: "Solicitud aceptada con éxito" });
     }
@@ -1009,8 +1078,49 @@ app.post("/rechazar_solicitud_musico", async (req, res) => {
 }
 );
 
+app.get("/numero_usuarios", async (req, res) => {
+
+    const sql1 = 'SELECT COUNT(*) as numClientes FROM clientes';
+    const sql2 = 'SELECT COUNT(*) as numMusicos FROM musicos';
+    const sql3 = 'SELECT COUNT(*) as numCharangas FROM charangas';
+
+    try{
+        const [rows1] = await db.query(sql1);
+        const [rows2] = await db.query(sql2);
+        const [rows3] = await db.query(sql3);
+
+        const numClientes = rows1[0].numClientes;
+        const numMusicos = rows2[0].numMusicos;
+        const numCharangas = rows3[0].numCharangas;
+
+        res.json({ numClientes, numMusicos, numCharangas });
+    }catch (error) {
+        console.error("Error al obtener el número de usuarios:", error);
+        res.status(500).json({ error: "Error al obtener el número de usuarios" });
+    }
+}
+);
 
 
+app.post('/enviar-email', async (req, res) => {
+    const { para, asunto, mensaje } = req.body;
+
+    console.log(para, asunto, mensaje);
+  
+    try {
+      await transporter.sendMail({
+        from: '"EasyMusic" <ipn6@gcloud.ua.es>', // Remitente
+        to: para,                                 // Destinatario
+        subject: asunto,                          // Asunto
+        html: `<p>${mensaje}</p>`                  // Cuerpo en HTML
+      });
+  
+      res.status(200).send('Correo enviado correctamente.');
+    } catch (error) {
+      console.error('Error enviando correo:', error);
+      res.status(500).send('Error al enviar correo.');
+    }
+  });
 
 
 // Iniciar el servidor

@@ -1,0 +1,27 @@
+.cookies-banner {
+    position: fixed;
+    bottom: 0;
+    width: 100%;
+    background-color: #2c2c2c;
+    color: white;
+    text-align: center;
+    padding: 1rem;
+    z-index: 1000;
+    font-size: 14px;
+  }
+  
+  .cookies-banner a {
+    color: #4da6ff;
+    text-decoration: underline;
+  }
+  
+  .cookies-banner button {
+    margin-left: 10px;
+    background-color: #4da6ff;
+    border: none;
+    color: white;
+    padding: 5px 10px;
+    border-radius: 4px;
+    cursor: pointer;
+  }
+  

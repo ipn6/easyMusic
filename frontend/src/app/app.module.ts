@@ -15,6 +15,8 @@ import { OfertasComponent } from './components/ofertas/ofertas.component';
 import { MusicosComponent } from './components/musicos/musicos.component';
 import { ListadoCharangasComponent } from './components/listado-charangas/listado-charangas.component';
 import { ReactiveFormsModule } from '@angular/forms';
+import { QuienesSomosComponent } from './components/quienes-somos/quienes-somos.component';
+import { TratamientoDatosComponent } from './components/tratamiento-datos/tratamiento-datos.component';
 
 @NgModule({
   declarations: [
@@ -29,6 +31,8 @@ import { ReactiveFormsModule } from '@angular/forms';
     OfertasComponent,
     MusicosComponent,
     ListadoCharangasComponent,
+    QuienesSomosComponent,
+    TratamientoDatosComponent,
   ],
   imports: [
     BrowserModule,

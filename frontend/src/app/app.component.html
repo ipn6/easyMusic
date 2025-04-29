@@ -1,2 +1,6 @@
 <app-navbar></app-navbar>
 <router-outlet></router-outlet>
+<div *ngIf="showCookiesBanner" class="cookies-banner">
+    <p>Usamos cookies para mejorar tu experiencia en la web. Si quieres saber más sobre tu privacidad pulsa <a (click)="goDatos()" class="text-primary text-decoration-underline" style="cursor: pointer;">aquí</a></p>
+    <button (click)="acceptCookies()">Aceptar</button>
+  </div>

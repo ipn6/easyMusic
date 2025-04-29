@@ -95,7 +95,6 @@
             <div class="d-flex justify-content-between align-items-center p-3" style="position: relative;">
                 <div>
                     <h5 class="mb-1">{{ oferta.nombre }}</h5>
-                    <p class="mb-0"> {{oferta.email}} </p>
                     <p class="mb-0">
                         <strong>Valoración media:</strong> {{ oferta.valoracionMedia }}
                     </p>
@@ -177,7 +176,6 @@
             <div class="d-flex justify-content-between align-items-center p-3" style="position: relative;">
                 <div>
                     <h5 class="mb-1">{{ oferta.nombre }}</h5>
-                    <p class="mb-0"> {{oferta.email}} </p>
                     <p class="mb-0">
                         <strong>Valoración media:</strong> {{ oferta.valoracionMedia }}
                     </p>
@@ -254,6 +252,7 @@
                         <li class="list-group-item d-flex justify-content-between align-items-start flex-column flex-md-row">
                             <div class="d-flex flex-grow-1">
                                 <div class="me-3">
+                                    <h5 class="fw-semibold  mt-md-0">Detalles del acto</h5>
                                     <p class="mb-1"><strong>Acto:</strong> {{ ofertaSeleccionada.titulo }}</p>
                                     <p class="mb-1">
                                         <strong>Tipo de acto: </strong>
@@ -270,10 +269,20 @@
                                         {{ ofertaSeleccionada.fechaInicio | date:'dd/MM/yyyy' }} - {{ ofertaSeleccionada.fechaFin | date:'dd/MM/yyyy' }}
                                     <p class="mb-1"><strong>Dirección:</strong> {{ ofertaSeleccionada.direccion }}</p>
                                     
+                                    <!-- Datos de contacto del cliente-->
+                                    <hr class="w-100 my-2" style="border-top: 1px solid black;" />
+                                    <h5 class="fw-semibold   mt-md-0">Datos de contacto del cliente</h5>
+                                    <p class="mb-1"><strong>Email:</strong> {{ ofertaSeleccionada.email }}</p>
+                                    <p class="mb-1"><strong>Teléfono:</strong> {{ ofertaSeleccionada.telefono }}</p>        
+
                                     <!-- Línea separadora -->
-                                    <hr style="border-top: 1px solid black;" />
+                                    <hr class="w-100 my-2" style="border-top: 1px solid black;" />
                                     
-                                    <p class="mb-1"><strong>Charanga aceptada:</strong> {{ solicitudAceptada.nombre }}</p>
+                                    <h5 class="fw-semibold  mt-md-0">Datos de la charanga</h5>
+                                    <p class="mb-1"><strong>Charanga:</strong> {{ solicitudAceptada.nombre }}</p>
+                                    <p class="mb-1"><strong>Email:</strong> {{ solicitudAceptada.email }}</p>
+                                    <p class="mb-1"><strong>Teléfono:</strong> {{ solicitudAceptada.telefono }}</p>
+                                    
                                     <!-- Mostrar valoración o asignar valoración a charanga-->
                                     <div *ngIf="solicitudAceptada.estado === 'Aceptada' && user.rol === 'cliente'">
                                         <p class="mb-1"><strong>Valorar Charanga:</strong></p>
@@ -311,6 +320,7 @@
                                         class="rounded-circle mb-3"
                                         style="width: 80px; height: 80px; object-fit: cover;">
                                 </div>
+                                
                             </div>
                         </li>
                     </ul>

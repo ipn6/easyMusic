@@ -21,6 +21,12 @@
           <li *ngIf="!user" class="nav-item">
             <a class="nav-link" routerLink="/register">Registro</a>
           </li>
+          <li *ngIf="!user" class="nav-item">
+            <a class="nav-link" routerLink="/quienes-somos">¿Quiénes somos?</a>
+          </li>
+          <li *ngIf="!user" class="nav-item">
+            <a class="nav-link" routerLink="/tratamiento-datos">Tratamiento de datos</a>
+          </li>
 
           <!-- Usuario registrado-->
           <li *ngIf="user" class="nav-item">

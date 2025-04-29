@@ -32,6 +32,8 @@ export class ActosComponent {
   actoSeleccionado: any = {}; 
   actosFiltrados: any[] = [];
   actosUsuario: any[] = []; 
+  emailCharanga: string = ''; // Email de la charanga
+  emailMusico: string = ''; // Email del músico
 
   acto = { titulo: '', descripcion: '',  idCharanga:'', idProvincia: '', fechaInicio: '', 
     fechaFin: '', tipo:'',    musicos: [
@@ -195,6 +197,7 @@ export class ActosComponent {
   }
 
   aceptarSolicitud(idActo: number, idMusico: number) {
+    
     this.http.post(`${this.apiUrl}/aceptar_solicitud_musico`, { idActo, idMusico }).subscribe(() => {
       this.obtenerActos();
       this.obtenerSolicitudesActo(idActo);

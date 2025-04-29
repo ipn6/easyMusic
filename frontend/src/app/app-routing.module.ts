@@ -9,6 +9,8 @@ import { OfertasComponent } from './components/ofertas/ofertas.component';
 import { ActosComponent } from './components/actos/actos.component';
 import { MusicosComponent } from './components/musicos/musicos.component';
 import { ListadoCharangasComponent } from './components/listado-charangas/listado-charangas.component';
+import { TratamientoDatosComponent } from './components/tratamiento-datos/tratamiento-datos.component';
+import { QuienesSomosComponent } from './components/quienes-somos/quienes-somos.component';
 
 const routes: Routes = [
   { path: '', component: HomeComponent }, // Ruta por defecto
@@ -19,7 +21,10 @@ const routes: Routes = [
   { path: 'ofertas', component: OfertasComponent }, // Ruta para ofertas
   { path: 'actos', component: ActosComponent }, // Ruta para actos
   { path: 'musicos', component: MusicosComponent }, // Ruta para musicos
-  { path: 'listado-charangas', component: ListadoCharangasComponent } // Ruta para listado de charangas
+  { path: 'listado-charangas', component: ListadoCharangasComponent }, // Ruta para listado de charangas
+  { path: 'tratamiento-datos', component: TratamientoDatosComponent }, // Ruta para tratamiento de datos
+  { path: 'quienes-somos', component: QuienesSomosComponent }, // Ruta para quienes somos
+  { path: '**', redirectTo: '', pathMatch: 'full' } // Redirigir cualquier ruta no encontrada a la ruta por defecto
 ];
 
 @NgModule({

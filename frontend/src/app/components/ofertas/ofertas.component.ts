@@ -82,6 +82,7 @@ export class OfertasComponent {
         this.solicitudesSinResponder = data.filter(solicitud => solicitud.estado === 'Pendiente');
         this.solicitudAceptada = data.find(solicitud => solicitud.estado === 'Aceptada' || solicitud.estado === 'Valorada') ||
           data.find(solicitud => solicitud.estado === 'Finalizada');
+
       },
       (error) => 
         console.error("Error al obtener solicitudes:", error)
@@ -220,5 +221,7 @@ export class OfertasComponent {
     const valoracion = this.valoracionesTipoActo.find(v => v.idCharanga === idCharanga);
     return valoracion ? valoracion.valoracion : 0;
   }
+
+  
   
 }
