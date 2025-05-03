@@ -846,6 +846,7 @@ app.get("/valoracionMediaTipoActo", async (req, res) => {
 
   app.post("/crear_acto", async (req, res) => {
     const { idCharanga, titulo, tipo, descripcion, fechaInicio, fechaFin, idProvincia, musicos} = req.body;
+    
 
 
     try {
@@ -853,14 +854,18 @@ app.get("/valoracionMediaTipoActo", async (req, res) => {
 
         await connection.beginTransaction();
 
+        const numMusicos = musicos.length;
+
         // Insertar acto
-        const sqlActo = "INSERT INTO actos (idCharanga, idProvincia, tipo, fechaInicio, fechaFin, titulo, descripcion) VALUES (?, ?, ?, ?, ?, ?, ?)";
+        const sqlActo = "INSERT INTO actos (idCharanga, idProvincia, tipo, fechaInicio, fechaFin, titulo, descripcion, musicosBuscados) VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
         
     
 
-        const [result] = await connection.query(sqlActo, [idCharanga, idProvincia, tipo, fechaInicio, fechaFin, titulo, descripcion]);
+        const [result] = await connection.query(sqlActo, [idCharanga, idProvincia, tipo, fechaInicio, fechaFin, titulo, descripcion, numMusicos]);
 
         const idActo = result.insertId;
+
+        
 
         for (const musico of musicos) {
             const sqlMusicos = "INSERT INTO acto_instrumentos (idActo, idInstrumento, cantidad) VALUES (?, ?, ?)";
@@ -885,16 +890,18 @@ app.get("/actos", async (req, res) => {
     }
 
     let sql = `
-        SELECT a.idActo, a.idCharanga, a.titulo, a.descripcion, a.fechaInicio, a.fechaFin, a.tipo,
+        SELECT a.idActo, a.idCharanga, a.titulo, a.descripcion, a.fechaInicio, a.fechaFin, a.tipo, a.musicosBuscados,
                u.idUsuario, u.nombre, u.valoracionMedia,
                p.nombre AS provincia,
                i.nombre AS instrumento,
-               ai.idInstrumento, ai.cantidad
+               ai.idInstrumento, ai.cantidad,
+               mc.idMusico AS musicoContratado, mc.valoracionCharanga, mc.valoracionMusico
         FROM actos a
-        JOIN acto_instrumentos ai ON a.idActo = ai.idActo
-        JOIN instrumentos i ON ai.idInstrumento = i.idInstrumento
+        LEFT JOIN acto_instrumentos ai ON a.idActo = ai.idActo
+        LEFT JOIN instrumentos i ON ai.idInstrumento = i.idInstrumento
         JOIN usuarios u ON a.idCharanga = u.idUsuario
         JOIN provincia p ON a.idProvincia = p.idProvincia
+        LEFT JOIN musicos_contratados mc ON a.idActo = mc.idActo
     `;
 
     let params = [];
@@ -929,7 +936,7 @@ app.get("/actos", async (req, res) => {
     try {
         const [rows] = await db.query(sql, params);
         const actosMap = new Map();
-
+        
         rows.forEach(row => {
             if (!actosMap.has(row.idActo)) {
                 actosMap.set(row.idActo, {
@@ -944,15 +951,35 @@ app.get("/actos", async (req, res) => {
                     nombre: row.nombre,
                     valoracionMedia: row.valoracionMedia,
                     provincia: row.provincia,
+                    musicosBuscados: row.musicosBuscados,
+                    musicosContratados: [],
                     musicos: []
                 });
             }
-
-            actosMap.get(row.idActo).musicos.push({
+            
+            //musicos buscados en el acto
+            const musicosSet = new Set(actosMap.get(row.idActo).musicos.map(m => JSON.stringify(m)));
+            const musicoData = {
                 idInstrumento: row.idInstrumento,
                 instrumento: row.instrumento,
                 cantidad: row.cantidad
-            });
+            };
+            if (!musicosSet.has(JSON.stringify(musicoData))) {
+                actosMap.get(row.idActo).musicos.push(musicoData);
+            }
+
+            //musicos contratados en el acto
+            
+            if (row.musicoContratado) {
+                const musicosContratadosSet = new Set(actosMap.get(row.idActo).musicosContratados.map(m => m.idMusico));
+                if (!musicosContratadosSet.has(row.musicoContratado)) {
+                    actosMap.get(row.idActo).musicosContratados.push({
+                        idMusico: row.musicoContratado,
+                        valoracionCharanga: row.valoracionCharanga,
+                        valoracionMusico: row.valoracionMusico
+                    });
+                }
+            }
         });
 
         const actos = Array.from(actosMap.values());
@@ -1005,7 +1032,7 @@ app.get("/solicitudes_acto", async (req, res) => {
 
     
         const sql = `
-            SELECT s.id, s.idActo, s.idMusico, s.estado, u.nombre, u.valoracionMedia,
+            SELECT s.id, s.idActo, s.idMusico, s.estado, u.nombre, u.valoracionMedia, m.idInstrumento, m.nivelMusical, m.coche,
             p.nombre AS provincia
             FROM solicitudes_musicos s
             JOIN musicos m ON s.idMusico = m.idMusico
@@ -1025,24 +1052,63 @@ app.get("/solicitudes_acto", async (req, res) => {
 );
 
 app.post("/aceptar_solicitud_musico", async (req, res) => {
-    const { idActo, idMusico} = req.body;
+    const { idActo, idMusico, idInstrumento} = req.body;
 
-    //const sql = 'UPDATE act set idCharanga = ?, contratada = 1 WHERE idOferta = ?';
+
+
+    const sql0 = 'UPDATE acto_instrumentos SET cantidad = cantidad - 1 WHERE idActo = ? AND idInstrumento = ?';
+
+    const sql1 = 'DELETE FROM acto_instrumentos WHERE idActo = ? AND idInstrumento = ? AND cantidad = 0';
+
     const sql2 = 'UPDATE solicitudes_musicos SET estado = ? WHERE idActo = ? AND idMusico = ?';
+
+    const sql3 = 'UPDATE actos SET musicosBuscados = musicosBuscados - 1 WHERE idActo = ?';
+
+    const sql4 = 'INSERT into musicos_contratados (idActo, idMusico) VALUES (?, ?)';
+    
     const estado = "Aceptada";
+
+    const tituloActo = 'SELECT titulo FROM actos WHERE idActo = ?';
+    const emailMusico = 'SELECT email FROM usuarios WHERE idUsuario = ?';
 
     try {
         const connection = await db.getConnection(); // Obtener una conexión del pool
         await connection.beginTransaction();
 
-        // Actualizar oferta
-        await connection.query(sql, [idMusico, idActo]);
+        //busca acto_instrumentos con idActo e idInstrumento iguales y resta 1 a cantidad, si cantidad es = 0 borra esa fila
+
+        // Actualizar cantidad en acto_instrumentos
+        await connection.query(sql0, [idActo, idInstrumento]);
+
+        // Eliminar fila si cantidad es igual a 1
+        await connection.query(sql1, [idActo, idInstrumento]);
 
         // Actualizar solicitud
         await connection.query(sql2, [estado, idActo, idMusico]);
 
+        //le resta 1 a musicosBuscados
+        await connection.query(sql3, [idActo]);
+
+        //inserta en musicos_contratados
+        await connection.query(sql4, [idActo, idMusico]);
+
+        // Obtener el título de la oferta
+        const [rows] = await connection.query(tituloActo, [idActo]);
+        const acto = rows[0].titulo;
+        
+        // Obtener el email del musico
+        const [rows2] = await connection.query(emailMusico, [idMusico]);
+        const email = rows2[0].email;
+
         await connection.commit();
         connection.release(); // Liberar conexión
+
+         // Enviar email a la charanga
+         await sendEmail(email, "Solicitud aceptada", `¡Enhorabuena! Tu solicitud para el acto "${acto}" ha sido aceptada. 
+            Inicia sesión para conocer los datos de contacto de la Charanga. 
+            https://victorious-stone-011abec10.6.azurestaticapps.net`);
+
+ 
 
         res.json({ message: "Solicitud aceptada con éxito" });
     }
@@ -1102,25 +1168,99 @@ app.get("/numero_usuarios", async (req, res) => {
 );
 
 
-app.post('/enviar-email', async (req, res) => {
-    const { para, asunto, mensaje } = req.body;
+app.get("/datos_musicos", async (req, res) => {
+    const {idMusicos, idActo} = req.query;
 
-    console.log(para, asunto, mensaje);
-  
+
+
+    //devuelve los datos de los musicos que estan en el array de idMusicos
+
+    const sql = `
+        SELECT m.idMusico, u.nombre, u.email, u.telefono, 
+               i.nombre as instrumento, m.coche, p.nombre AS provincia, mc.valoracionCharanga, mc.valoracionMusico
+        FROM usuarios u
+        JOIN musicos m ON u.idUsuario = m.idMusico
+        JOIN provincia p ON u.idProvincia = p.idProvincia
+        JOIN instrumentos i ON m.idInstrumento = i.idInstrumento
+        JOIN musicos_contratados mc ON mc.idMusico = m.idMusico
+        WHERE u.idUsuario IN (?) and mc.idActo = ?
+    `;
+
     try {
-      await transporter.sendMail({
-        from: '"EasyMusic" <ipn6@gcloud.ua.es>', // Remitente
-        to: para,                                 // Destinatario
-        subject: asunto,                          // Asunto
-        html: `<p>${mensaje}</p>`                  // Cuerpo en HTML
-      });
-  
-      res.status(200).send('Correo enviado correctamente.');
+        const ids = Array.isArray(idMusicos) ? idMusicos : idMusicos.split(',');
+        const [rows] = await db.query(sql, [ids, idActo]);
+        res.json(rows);
     } catch (error) {
-      console.error('Error enviando correo:', error);
-      res.status(500).send('Error al enviar correo.');
+        console.error("Error al obtener datos de músicos:", error);
+        res.status(500).json({ error: "Error al obtener datos de músicos" });
     }
-  });
+
+    }
+);
+
+app.post("/asignar_valoracion_charanga_acto", async (req, res) => {
+    const { idActo, idCharanga, idMusico, valoracion, tipoActo } = req.body;
+
+
+    const sql = 'UPDATE musicos_contratados SET valoracionCharanga = ? WHERE idActo = ? AND idMusico = ?';
+    const sql3 = 'INSERT INTO valoraciones (idUsuario, puntuacion, tipoActo) VALUES (?, ?, ?)';
+    const estado = "Valorada";
+
+
+    try {
+        const connection = await db.getConnection(); // Obtener una conexión del pool
+        await connection.beginTransaction();
+
+        // Actualizar acto
+        await connection.query(sql, [valoracion, idActo, idMusico]);
+
+
+        await connection.query(sql3, [idCharanga, valoracion, tipoActo]);
+
+        await connection.commit();
+        connection.release(); // Liberar conexión
+
+        res.json({ message: "Valoración asignada con éxito" });
+    }
+    catch (error) {
+        console.error("Error al asignar valoración a charanga:", error);
+        res.status(500).json({ error: "Error al asignar valoración a charanga" });
+    }
+}
+);
+
+app.post("/asignar_valoracion_musico", async (req, res) => {
+    const { idActo, idMusico, valoracion, tipoActo } = req.body;
+
+
+    const sql = 'UPDATE musicos_contratados SET valoracionMusico = ? WHERE idActo = ? AND idMusico = ?';
+    const sql3 = 'INSERT INTO valoraciones (idUsuario, puntuacion, tipoActo) VALUES (?, ?, ?)';
+    const estado = "Valorada";
+
+
+    try {
+        const connection = await db.getConnection(); // Obtener una conexión del pool
+        await connection.beginTransaction();
+
+        // Actualizar acto
+        await connection.query(sql, [valoracion, idActo, idMusico]);
+
+
+        await connection.query(sql3, [idMusico, valoracion, tipoActo]);
+
+        await connection.commit();
+        connection.release(); // Liberar conexión
+
+        res.json({ message: "Valoración asignada con éxito" });
+    }
+    catch (error) {
+        console.error("Error al asignar valoración a charanga:", error);
+        res.status(500).json({ error: "Error al asignar valoración a charanga" });
+    }
+}
+);
+
+
 
 
 // Iniciar el servidor

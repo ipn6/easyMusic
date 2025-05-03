@@ -122,12 +122,12 @@
     <div *ngIf="actosFiltrados.length > 0 && user.rol === 'musico'">
         <div *ngFor="let act of actosFiltrados" class="charanga-card card mb-3 shadow">
             <!-- Cabecera -->
-            <div class="d-flex justify-content-between align-items-center p-3" style="position: relative;">
+            <div *ngIf="act.musicosBuscados > 0 " class="d-flex justify-content-between align-items-center p-3" style="position: relative;">
                 <div>
                     <h5 class="mb-1">{{ act.nombre }}</h5>
                     <p class="mb-0"> {{act.email}} </p>
                     <p class="mb-0">
-                        <strong>Valoración media:</strong> {{ act.valoracionMedia }}
+                        <strong>Valoración media:</strong> {{ act.valoracionMedia > 0 ? act.valoracionMedia : 'Sin valoraciones'  }}
                     </p>
                 </div>
                 <div style="margin-left: auto; margin-right: 10px;">
@@ -202,7 +202,8 @@
                     <h5 class="mb-1">{{ act.nombre }}</h5>
                     <p class="mb-0"> {{act.email}} </p>
                     <p class="mb-0">
-                        <strong>Valoración media:</strong> {{ act.valoracionMedia }}
+                        <strong>Valoración media:</strong> {{ act.valoracionMedia > 0 ? act.valoracionMedia : 'Sin valoraciones' }}
+                        
                     </p>
                 </div>
                 <div style="margin-left: auto; margin-right: 10px;">
@@ -276,6 +277,9 @@
                             <div class="me-3">
                                 <p class="mb-1"><strong>Nombre:</strong> {{ solicitud.nombre }}</p>
                                 <p class="mb-1"><strong>Provincia:</strong> {{ solicitud.provincia}}</p>
+                                <p class="mb-1"><strong>Instrumento:</strong> {{ getNombreInstrumento(solicitud.idInstrumento) }}</p>
+                                <p class="mb-1"><strong>Estudios musicales:</strong> {{ solicitud.nivelMusical }}</p>
+                                <p class="mb-1"><strong>Tiene coche?</strong> {{ solicitud.coche == 1 ? 'Sí' : 'No' }}</p>
                                 <p *ngIf="solicitud.valoracionMedia > 0" class="mb-1"><strong>Valoración media:</strong> {{ solicitud.valoracionMedia }}</p>
                                 <p *ngIf="solicitud.valoracionMedia == 0" class="mb-1"><strong>Valoración media:</strong> Sin valoraciones</p>
                                 <p class="mb-1">
@@ -288,6 +292,12 @@
                                         <span *ngIf="actoSeleccionado.tipo === 'Boda'">Boda/Bautizo/Comunión:</span>
                                         <span *ngIf="actoSeleccionado.tipo === 'DiaCompleto'">Día completo:</span>
                                     </strong>
+                                    <span *ngIf="getValoracion(solicitud.idCharanga) > 0">
+                                        {{ getValoracion(solicitud.idCharanga) }}
+                                    </span>
+                                    <span *ngIf="getValoracion(solicitud.idCharanga) == 0">
+                                        Sin valoraciones
+                                    </span>
 
                                 </p>
                             </div>
@@ -299,7 +309,7 @@
                                     class="rounded-circle mb-3"
                                     style="width: 80px; height: 80px; object-fit: cover;">
                                 <button class="btn btn-primary mb-2" 
-                                        (click)="aceptarSolicitud(solicitud.idActo, solicitud.idMusico)">
+                                        (click)="aceptarSolicitud(solicitud.idActo, solicitud.idMusico, solicitud.idInstrumento)">
                                     Aceptar
                                 </button>
                                 <button class="btn btn-danger" 
@@ -311,9 +321,55 @@
                     </li>
                 </ul>
             </div>
+
             <div *ngIf="solicitudesSinResponder.length === 0" class="alert alert-info mt-3">
                 No se han recibido solicitudes para esta oferta.
             </div>
+
+            <!-- Aqui se muestran los musicos contratados-->
+
+            <div *ngIf="actoSeleccionado.musicosContratados?.length > 0" class="mt-3">
+                <h5 class="ms-3">Músicos contratados</h5>
+                <ul class="list-group">
+                    <li *ngFor="let musico of musicosContratados" class="list-group-item d-flex flex-row justify-content-between align-items-start">
+                        <!-- Datos del músico -->
+                        <div class="flex-grow-1 me-3">
+                          <p class="mb-1"><strong>Nombre:</strong> {{ musico.nombre }}</p>
+                          <p class="mb-1"><strong>Email:</strong> {{ musico.email }}</p>
+                          <p class="mb-1"><strong>Teléfono:</strong> {{ musico.telefono }}</p>
+                          <p class="mb-1"><strong>Instrumento:</strong> {{ musico.instrumento }}</p>
+                          <p class="mb-1"><strong>Provincia:</strong> {{ musico.provincia }}</p>
+                          <p class="mb-1"><strong>Coche:</strong> {{ musico.coche == 1 ? 'Sí' : 'No' }}</p>
+                        </div>
+                      
+                        <!-- Foto + valoración alineada a la derecha -->
+                        <div class="d-flex flex-column align-items-center w-auto" style="min-width: 130px;">
+                          <img [src]="getFotoUrl(musico.idMusico) || 'assets/perfil.png'" 
+                               alt="Foto del músico contratado" 
+                               class="rounded-circle mb-2"
+                               style="width: 80px; height: 80px; object-fit: cover;">
+                      
+                          <ng-container *ngIf="user.rol === 'charanga'">
+                            <div *ngIf="musico.valoracionMusico == null" class="text-center">
+                              <label class="mb-1"><strong>Valorar músico:</strong></label>
+                              <select class="form-select w-auto mx-auto mb-2" [(ngModel)]="musico.valoracionMusico2">
+                                <option *ngFor="let valor2 of [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]" [value]="valor2">{{ valor2 }}</option>
+                              </select>
+                              <button class="btn btn-success btn-sm" 
+                                      (click)="asignarValoracionMusico(actoSeleccionado.idActo, musico.idMusico, musico.valoracionMusico2, actoSeleccionado.tipo)">
+                                Asignar valoración
+                              </button>
+                            </div>
+                            <div *ngIf="musico.valoracionMusico != null" class="text-center">
+                              <p class="mb-0"><strong>Valoración asignada:</strong></p>
+                              <p>{{ musico.valoracionMusico }}</p>
+                            </div>
+                          </ng-container>
+                        </div>
+                      </li>
+                </ul>
+            </div>
+ 
         </div>
 
     </div>

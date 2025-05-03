@@ -37,7 +37,7 @@ export class OfertasComponent {
   ofertasUsuario: any[] = []; // Ofertas del usuario
   valoracionesTipoActo: ValoracionTipoActo[] = []; // Valoraciones por tipo de acto
   nuevaOferta = { titulo: '', descripcion: '', idCliente:'', idCharanga:'', idProvincia: '', fechaInicio: '', 
-    fechaFin: '', direccion: '', tipo: '', contratada: '', valoracionCliente: '', valoracionCharanga: '', };
+    fechaFin: '', direccion: '', tipo: '', contratada: '', valoracionCliente: '1', valoracionCharanga: '1', };
   private apiUrl =  environment.apiUrl;
   mostrarFormulario: boolean = false;
 

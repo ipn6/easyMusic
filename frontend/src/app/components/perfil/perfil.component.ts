@@ -49,7 +49,6 @@ export class PerfilComponent implements OnInit {
     this.http.get<Provincia[]>(`${this.apiUrl}/provincias`).subscribe(
       (data) => {
         this.provincias = data;
-        console.log('Provincias cargadas:', this.provincias);
       },
       (error) => console.error('Error al cargar provincias', error)
     );
@@ -104,10 +103,6 @@ export class PerfilComponent implements OnInit {
       formData.append('foto', this.fotoSeleccionada);
     }
 
-    console.log('📤 Enviando FormData:');
-    for (const pair of (formData as any).entries()) {
-      console.log(pair[0] + ':', pair[1]);
-    }
 
     this.http.post(`${this.apiUrl}/perfil`, formData, {
       headers: {
