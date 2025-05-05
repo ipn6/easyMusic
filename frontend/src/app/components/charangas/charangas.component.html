@@ -67,7 +67,7 @@
           <div>
             <h5 class="mb-1">{{ anuncio.nombre }}</h5>
             <p class="mb-0">
-                <strong>Valoración media:</strong> {{ anuncio.valoracionMedia }}
+                <strong>Valoración media:</strong> {{ anuncio.valoracionMedia > 0 ? anuncio.valoracionMedia : 'Sin valoraciones' }}
             </p>
           </div>
           <div style="margin-left: auto; margin-right: 10px;">

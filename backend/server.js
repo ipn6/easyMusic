@@ -788,7 +788,7 @@ app.post("/asignar_valoracion_cliente", async (req, res) => {
 );
 
 app.post("/setValoracionMedia", async (req, res) => {
-    const { idUsuario, valoracion} = req.body;
+    const { idUsuario} = req.body;
 
     //Busca todas las valoraciones de ese usuario y saca la media
     //despues hace update de usuario.valoracionMedia con ese valor
@@ -993,6 +993,9 @@ app.get("/actos", async (req, res) => {
 
 app.post('/crear_solicitud_musico', async (req, res) => {
     const { idActo, idMusico } = req.body;
+
+    const datosActo = 'SELECT titulo, idCharanga FROM actos WHERE idActo = ?';
+    const emailCharanga = 'SELECT email FROM usuarios WHERE idUsuario = ?';
     
     try {
         const connection = await db.getConnection(); // Obtener una conexión del pool
@@ -1001,8 +1004,22 @@ app.post('/crear_solicitud_musico', async (req, res) => {
         const sql = "INSERT INTO solicitudes_musicos (idActo, idMusico) VALUES (?, ?)";
         const [result] = await connection.query(sql, [idActo, idMusico]);
 
+        // Obtener el título e idCharanga de la oferta
+        const [rows] = await connection.query(datosActo, [idActo]);
+        const acto = rows[0].titulo;
+        const idCharanga = rows[0].idCharanga;
+        
+        // Obtener el email de la charanga
+        const [rows3] = await connection.query(emailCharanga, [idCharanga]);
+        const email = rows3[0].email;
+
         await connection.commit();
         connection.release(); // Liberar conexión
+
+        // Enviar email a la charanga
+        await sendEmail(email, "Solicitud recibida", `Has recibido una solicitud para participar en el acto "${acto}". 
+                    Inicia sesión para conocer los datos de contacto del músico. 
+                    https://victorious-stone-011abec10.6.azurestaticapps.net`);
 
         res.json({ message: "Solicitud creada con éxito", idSolicitud: result.insertId });
     } catch (error) {
@@ -1203,6 +1220,7 @@ app.post("/asignar_valoracion_charanga_acto", async (req, res) => {
 
 
     const sql = 'UPDATE musicos_contratados SET valoracionCharanga = ? WHERE idActo = ? AND idMusico = ?';
+    const sql2 = 'UPDATE solicitudes_musicos SET estado = ? WHERE idActo = ? AND idMusico = ?';
     const sql3 = 'INSERT INTO valoraciones (idUsuario, puntuacion, tipoActo) VALUES (?, ?, ?)';
     const estado = "Valorada";
 
@@ -1214,6 +1232,8 @@ app.post("/asignar_valoracion_charanga_acto", async (req, res) => {
         // Actualizar acto
         await connection.query(sql, [valoracion, idActo, idMusico]);
 
+        // Actualizar solicitud
+        await connection.query(sql2, [estado, idActo, idMusico]);
 
         await connection.query(sql3, [idCharanga, valoracion, tipoActo]);
 

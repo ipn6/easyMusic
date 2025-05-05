@@ -22,7 +22,7 @@ export class CharangasComponent {
   filtroProvincia: string = '';
   fechaInicioFiltro: string = '';
   fechaFinFiltro: string = '';
-  nuevoAnuncio = { titulo: '', descripcion: '', idProvincia: '', fechaInicio: '', fechaFin: '' };
+  nuevoAnuncio = { titulo: '', descripcion: '', idProvincia: '', fechaInicio: new Date().toISOString().split('T')[0], fechaFin: new Date().toISOString().split('T')[0] };
   mostrarFormulario: boolean = false;
 
 

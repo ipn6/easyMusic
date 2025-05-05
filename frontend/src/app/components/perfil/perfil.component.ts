@@ -114,7 +114,7 @@ export class PerfilComponent implements OnInit {
       this.router.navigate(['/perfil']); 
       alert('Perfil actualizado correctamente');
     }, error => {
-      console.error('🚨 Error al actualizar perfil:', error);
+      console.error(' Error al actualizar perfil:', error);
     });
   }
 

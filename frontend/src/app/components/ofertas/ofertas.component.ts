@@ -36,8 +36,8 @@ export class OfertasComponent {
   ofertasFiltradas: any[] = []; // Ofertas después del filtro
   ofertasUsuario: any[] = []; // Ofertas del usuario
   valoracionesTipoActo: ValoracionTipoActo[] = []; // Valoraciones por tipo de acto
-  nuevaOferta = { titulo: '', descripcion: '', idCliente:'', idCharanga:'', idProvincia: '', fechaInicio: '', 
-    fechaFin: '', direccion: '', tipo: '', contratada: '', valoracionCliente: '1', valoracionCharanga: '1', };
+  nuevaOferta = { titulo: '', descripcion: '', idCliente:'', idCharanga:'', idProvincia: '', fechaInicio: new Date().toISOString().split('T')[0], 
+    fechaFin: new Date().toISOString().split('T')[0], direccion: '', tipo: '', contratada: '', valoracionCliente: '1', valoracionCharanga: '1', };
   private apiUrl =  environment.apiUrl;
   mostrarFormulario: boolean = false;
 
@@ -193,7 +193,7 @@ export class OfertasComponent {
     this.http.post(`${this.apiUrl}/asignar_valoracion_charanga`, { idOferta, idCharanga, valoracion, tipoActo }).subscribe(() => {
       this.obtenerOfertas();
       this.obtenerSolicitudesOferta(idOferta);
-      this.setValoracionMedia(idCharanga, valoracion);
+      this.setValoracionMedia(idCharanga);
     });
   }
 
@@ -201,12 +201,12 @@ export class OfertasComponent {
     this.http.post(`${this.apiUrl}/asignar_valoracion_cliente`, { idOferta, idCharanga, idUsuario, valoracion }).subscribe(() => {
       this.obtenerOfertas();
       this.obtenerSolicitudesOferta(idOferta);
-      this.setValoracionMedia(idUsuario, valoracion);
+      this.setValoracionMedia(idUsuario);
     });
   }
 
-  setValoracionMedia(idUsuario: number, valoracion: number) {
-    this.http.post(`${this.apiUrl}/setValoracionMedia`, { idUsuario, valoracion }).subscribe(() => {
+  setValoracionMedia(idUsuario: number) {
+    this.http.post(`${this.apiUrl}/setValoracionMedia`, { idUsuario }).subscribe(() => {
       this.obtenerOfertas();
     });
   }

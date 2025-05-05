@@ -56,11 +56,21 @@ export class ActosComponent {
   actosUsuario: any[] = []; 
   valoracionesTipoActo: ValoracionTipoActo[] = []; // Valoraciones por tipo de acto
   musicosContratados: MusicoContratado[] = []; // Músicos contratados
+  musicoContratado: MusicoContratado = { idMusico: 0, nombre: '', email: '', telefono: '', instrumento: '', provincia: '', coche: 0, valoracionCharanga: 0, valoracionMusico: 0, valoracionMusico2: 1, valoracionCharanga2: 1 };
 
-  acto = { titulo: '', descripcion: '',  idCharanga:'', idProvincia: '', fechaInicio: '', 
-    fechaFin: '', tipo:'',    musicos: [
-      { cantidad: 1, idInstrumento: '' }]};
-      
+  acto = { 
+    titulo: '', 
+    descripcion: '',  
+    idCharanga: '', 
+    idProvincia: '', 
+    fechaInicio: new Date().toISOString().split('T')[0], 
+    fechaFin: new Date().toISOString().split('T')[0], 
+    tipo: '',    
+    musicos: [
+      { cantidad: 1, idInstrumento: '' }
+    ]
+  };
+ 
   private apiUrl =  environment.apiUrl;
   mostrarFormulario: boolean = false;
   solicitudesUser: any[] = []; // Solicitudes del usuario
@@ -191,6 +201,7 @@ export class ActosComponent {
     this.http.get<any[]>(`${this.apiUrl}/solicitudes_musico`, { params: { idMusico } }).subscribe(
       (data) => {
         this.solicitudesUser = data;
+        console.log("Solicitudes del usuario:", this.solicitudesUser);
       },
       (error) => 
         console.error("Error al obtener solicitudes:", error)
@@ -220,6 +231,7 @@ export class ActosComponent {
   }
 
   esAceptada(idActo: number): boolean {
+
     return this.solicitudesUser.some(solicitud => solicitud.idActo === idActo && (solicitud.estado === 'Aceptada' || 
       solicitud.estado === 'Valorada' || solicitud.estado === 'Finalizada'));
   }
@@ -236,13 +248,28 @@ export class ActosComponent {
     this.actoSeleccionado = acto;
     this.obtenerSolicitudesActo(acto.idActo);
     const idMusicos = acto.musicosContratados.map((musico: any) => musico.idMusico);
-    console.log(idMusicos);
     if (idMusicos.length > 0) {
       this.obtenerDatosMusicos(idMusicos, acto.idActo);
     }
 
     //this.obtenerValoracionesTipoActoSolicitud(acto.idActo, acto.tipo);
   }
+
+  verActo2(acto: any, idMusico: number){
+    this.actoSeleccionado = acto;
+    this.obtenerSolicitudesActo(acto.idActo);
+    const idMusicos = acto.musicosContratados.map((musico: any) => musico.idMusico);
+    if (idMusicos.length > 0) {
+      this.obtenerDatosMusicos(idMusicos, acto.idActo);
+    }
+    console.log("Músicos contratados:", this.musicosContratados);
+
+    this.musicoContratado = this.musicosContratados.find(m => m.idMusico === idMusico) ?? { idMusico: 0, nombre: '', email: '', telefono: '', instrumento: '', provincia: '', coche: 0, valoracionCharanga: 0, valoracionMusico: 0, valoracionMusico2: 1, valoracionCharanga2: 1 };
+    console.log("Músico contratado:", this.musicoContratado);
+
+    //this.obtenerValoracionesTipoActoSolicitud(acto.idActo, acto.tipo);
+  }
+  
 
   aceptarSolicitud(idActo: number, idMusico: number, idInstrumento: number) {
     
