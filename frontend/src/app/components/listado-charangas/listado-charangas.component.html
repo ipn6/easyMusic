@@ -32,7 +32,7 @@
               <p class="card-text"><strong>Provincia:</strong> {{ charanga.provincia }}</p>
               <p class="card-text"><strong>Año de Fundación:</strong> {{ charanga.fundacion }}</p>
               <p class="card-text"><strong>Biografía:</strong> {{ charanga.biografia }}</p>
-              <p class="card-text"><strong>Valoración media:</strong> {{ charanga.valoracionMedia}}</p>
+              <p class="card-text"><strong>Valoración media:</strong> {{ charanga.valoracionMedia > 0 ? charanga.valoracionMedia : 'Sin valoraciones' }}</p>
             </div>
           </div>
         </div>

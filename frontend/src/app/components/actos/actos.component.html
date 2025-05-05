@@ -34,14 +34,14 @@
                 <textarea class="form-control" placeholder="Descripción" [(ngModel)]="acto.descripcion"></textarea>
             </div>
             <div class="col-md-2 mb-2">
-                <input type="date" class="form-control" [(ngModel)]="acto.fechaInicio">
+                <input type="date" class="form-control" [(ngModel)]="acto.fechaInicio" placeholder="Fecha de inicio">
             </div>
             <div class="col-md-2 mb-2">
                 <input type="date" class="form-control" [(ngModel)]="acto.fechaFin">
             </div>
             <div class="col-md-4 mb-2">
                 <select class="form-select" [(ngModel)]="acto.idProvincia">
-                    <option value="">Selecciona una provincia</option>
+                    <option value="" disabled selected>Selecciona una provincia</option>
                     <option *ngFor="let provincia of provincias" [value]="provincia.idProvincia">{{ provincia.nombre }}</option>
                 </select>
             </div>
@@ -54,7 +54,7 @@
                 </div>
                 <div class="col-7">
                     <select class="form-select" [(ngModel)]="musico.idInstrumento">
-                        <option value="">Instrumento</option>
+                        <option value="" disabled selected>Instrumento</option>
                     <option *ngFor="let instrumento of instrumentos" [value]="instrumento.idInstrumento">{{ instrumento.nombre }}</option>
                     </select>
                 </div>
