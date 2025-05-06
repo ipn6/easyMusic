@@ -1218,6 +1218,7 @@ app.get("/datos_musicos", async (req, res) => {
 app.post("/asignar_valoracion_charanga_acto", async (req, res) => {
     const { idActo, idCharanga, idMusico, valoracion, tipoActo } = req.body;
 
+    console.log("Parametros recibidos:", idActo, idCharanga, idMusico, valoracion, tipoActo);
 
     const sql = 'UPDATE musicos_contratados SET valoracionCharanga = ? WHERE idActo = ? AND idMusico = ?';
     const sql2 = 'UPDATE solicitudes_musicos SET estado = ? WHERE idActo = ? AND idMusico = ?';

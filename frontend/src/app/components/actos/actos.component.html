@@ -300,7 +300,7 @@
 
                                 <!-- Valorar charanga-->
                                 <hr class="w-100 my-2" style="border-top: 1px solid black;" />
-                                    <div *ngIf="musicoContratado.valoracionCharanga == 0" class="text-center">
+                                    <div *ngIf="musicoContratado.valoracionCharanga == null" class="text-center">
                                       <label class="mb-1"><strong>Valorar charanga:</strong></label>
                                       <select class="form-select w-auto mx-auto mb-2" [(ngModel)]="musicoContratado.valoracionCharanga2">
                                         <option *ngFor="let valor2 of [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]" [value]="valor2">{{ valor2 }}</option>
@@ -312,7 +312,7 @@
                                       </button>
                                     </div>
 
-                                    <div *ngIf="musicoContratado.valoracionCharanga > 0" class="text-center">
+                                    <div *ngIf="musicoContratado.valoracionCharanga != null" class="text-center">
                                       <p class="mb-0"><strong>Valoración asignada:</strong></p>
                                       <p>{{ musicoContratado.valoracionCharanga }}</p>
                                     </div>
