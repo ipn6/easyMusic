@@ -54,7 +54,7 @@ const transporter = nodemailer.createTransport({
     service: 'gmail',
     auth: {
       user: 'ipn6@gcloud.ua.es',         // Tu correo
-      pass: 'xdka tham sbdw clif'        // Tu contraseña o App Password (más seguro)
+      pass: 'xdka tham sbdw clif'        
     }
   });
 
@@ -607,6 +607,9 @@ app.post("/crear_oferta", async (req, res) => {
 
 app.post('/crear_solicitud', async (req, res) => {
     const { idOferta, idCharanga } = req.body;
+
+    const sqlDatosOferta = 'SELECT idCliente, titulo FROM ofertas WHERE idOferta = ?'; 
+    const sqlEmail = 'SELECT email FROM usuarios WHERE idUsuario = ?';
     
     try {
         const connection = await db.getConnection(); // Obtener una conexión del pool
@@ -615,8 +618,20 @@ app.post('/crear_solicitud', async (req, res) => {
         const sql = "INSERT INTO solicitudes (idOferta, idCharanga) VALUES (?, ?)";
         const [result] = await connection.query(sql, [idOferta, idCharanga]);
 
+        const [result2] = await connection.query(sqlDatosOferta, [idOferta]);
+        const idCliente = result2[0].idCliente;
+        const oferta = result2[0].titulo;
+        const [result3] = await connection.query(sqlEmail, [idCliente]);
+        const email = result3[0].email;
+
+
         await connection.commit();
         connection.release(); // Liberar conexión
+
+        // Enviar email a la charanga
+        await sendEmail(email, "Solicitud recibida", `Has recibido una solicitud para participar en la oferta "${oferta}". 
+            Inicia sesión para conocer los datos de contacto de la charanga. 
+            https://victorious-stone-011abec10.6.azurestaticapps.net`);
 
         res.json({ message: "Solicitud creada con éxito", idSolicitud: result.insertId });
     } catch (error) {
