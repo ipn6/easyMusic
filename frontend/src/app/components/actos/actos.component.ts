@@ -56,7 +56,7 @@ export class ActosComponent {
   actosUsuario: any[] = []; 
   valoracionesTipoActo: ValoracionTipoActo[] = []; // Valoraciones por tipo de acto
   musicosContratados: MusicoContratado[] = []; // Músicos contratados
-  musicoContratado: MusicoContratado = { idMusico: 0, nombre: '', email: '', telefono: '', instrumento: '', provincia: '', coche: 0, valoracionCharanga: 0, valoracionMusico: 0, valoracionMusico2: 1, valoracionCharanga2: 1 };
+  musicoContratado = { idMusico: 0, valoracionCharanga: 0, valoracionMusico: 0, valoracionMusico2: 1, valoracionCharanga2: 1 };
 
   acto = { 
     titulo: '', 
@@ -124,6 +124,21 @@ export class ActosComponent {
         });
         
         console.log("Datos de los músicos:", this.musicosContratados);
+        
+      },
+      (error) => console.error("Error al obtener datos del músico:", error)
+    );
+
+  }
+
+  obtenerDatosMusico(idMusico: number, idActo: number) {
+    this.http.get<any[]>(`${this.apiUrl}/datos_musico`, { params: { idMusico, idActo } }).subscribe(
+      (data) => {
+        this.musicoContratado = data[0];
+        this.musicoContratado.valoracionMusico2 = 1;
+        this.musicoContratado.valoracionCharanga2 = 1;
+        
+        console.log("Datos del músico:", this.musicoContratado);
         
       },
       (error) => console.error("Error al obtener datos del músico:", error)
@@ -258,16 +273,7 @@ export class ActosComponent {
   verActo2(acto: any, idMusico: number){
     this.actoSeleccionado = acto;
     this.obtenerSolicitudesActo(acto.idActo);
-    const idMusicos = acto.musicosContratados.map((musico: any) => musico.idMusico);
-    if (idMusicos.length > 0) {
-      this.obtenerDatosMusicos(idMusicos, acto.idActo);
-    }
-    console.log("Músicos contratados:", this.musicosContratados);
-
-    this.musicoContratado = this.musicosContratados.find(m => m.idMusico === idMusico) ?? { idMusico: 0, nombre: '', email: '', telefono: '', instrumento: '', provincia: '', coche: 0, valoracionCharanga: 0, valoracionMusico: 0, valoracionMusico2: 1, valoracionCharanga2: 1 };
-    console.log("Músico contratado:", this.musicoContratado);
-
-    //this.obtenerValoracionesTipoActoSolicitud(acto.idActo, acto.tipo);
+    this.obtenerDatosMusico(idMusico, acto.idActo);
   }
   
 
@@ -321,8 +327,10 @@ export class ActosComponent {
       this.http.post(`${this.apiUrl}/asignar_valoracion_charanga_acto`, { idActo, idCharanga, idMusico, valoracion, tipoActo }).subscribe(() => {
         this.obtenerActos();
         this.obtenerSolicitudesActo(idActo);
+        this.obtenerDatosMusico(idMusico, idActo);
         this.actualizarValoracionCharanga(idMusico, valoracion);
         this.setValoracionMedia(idCharanga, valoracion);
+        
       });
     }
   

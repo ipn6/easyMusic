@@ -101,8 +101,8 @@ app.post("/register", upload.single("foto"), async (req, res) => {
         const hashedPassword = await bcrypt.hash(password, 10);
         const connection = await db.getConnection(); // Obtener una conexión del pool
         let foto = req.file ? req.file.buffer : null;
-        console.log("Foto recibida:", req.file);
         await connection.beginTransaction();
+        let instrumento = '';
 
         // Insertar usuario
         const sqlUsuario = "INSERT INTO usuarios (email, password, nombre, rol, telefono, idProvincia, foto, biografia, valoracionMedia) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
@@ -126,13 +126,27 @@ app.post("/register", upload.single("foto"), async (req, res) => {
             await connection.query(sql2, [userId]);
         }else if(rol === "musico") {
             const sql2 = "INSERT INTO musicos (idMusico, idInstrumento, nivelMusical, coche) VALUES (?, ?, ?, ?)";
+
             await connection.query(sql2, [userId, idInstrumento, nivelMusical, coche2]);
+            const sqlInstrumento = "SELECT nombre FROM instrumentos WHERE idInstrumento = ?";
+            const [result2] = await connection.query(sqlInstrumento, [idInstrumento]);
+            instrumento = result2[0].nombre;
         }
         else{
 
             const sql2 = "INSERT INTO charangas (idCharanga, fundacion) VALUES (?, ?)";
             await connection.query(sql2, [userId, fundacion]);
         }
+
+        //Obtener nombre provincia
+        const sql3 = `
+            SELECT p.nombre AS provincia
+            FROM provincia p
+            WHERE p.idProvincia = ? 
+        `;
+        const [result2] = await connection.query(sql3, [idProvincia]);
+
+        const provincia = result2[0].provincia;
 
         
 
@@ -145,13 +159,13 @@ app.post("/register", upload.single("foto"), async (req, res) => {
         }
 
         if(rol === "musico") {
-            user = { idUsuario: userId, nombre, email, telefono, rol, idProvincia, valoracionMedia, biografia, 
-                idMusico: userId, idInstrumento, nivelMusical, coche};
+            user = { idUsuario: userId, nombre, email, telefono, rol, provincia, valoracionMedia, biografia, 
+                idMusico: userId, instrumento, nivelMusical, coche};
         }else if(rol === "charanga") {
-            user = { idUsuario: userId, nombre, email, telefono, rol, idProvincia, valoracionMedia, biografia,
+            user = { idUsuario: userId, nombre, email, telefono, rol, provincia, valoracionMedia, biografia,
                 idCharanga: userId, fundacion };
         }else{
-            user = { idUsuario: userId, nombre, email, telefono, rol, idProvincia, valoracionMedia, biografia, idCliente: userId };
+            user = { idUsuario: userId, nombre, email, telefono, rol, provincia, valoracionMedia, biografia, idCliente: userId };
         }
         
         
@@ -178,6 +192,8 @@ app.post("/login", async (req, res) => {
 
     const sql = "SELECT * FROM usuarios WHERE email = ?";
 
+    const sqlProvincia = "SELECT nombre FROM provincia WHERE idProvincia = ?";
+
     try {
         // Ejecutar la consulta con await
         const [results] = await db.query(sql, [email]);
@@ -194,15 +210,21 @@ app.post("/login", async (req, res) => {
             return res.status(400).json({ error: "Contraseña incorrecta" });
         }
 
+        // Obtener el nombre de la provincia
+        const [results4] = await db.query(sqlProvincia, [usuario.idProvincia]);
+        const nombreProvincia = results4[0].nombre;
+
         //buscar datos del usuario en la tabla correspondiente
         let user = {};
         if(usuario.rol === "musico"){
             const sql2 = "SELECT * FROM musicos WHERE idMusico = ?";
             const [results2] = await db.query(sql2, [usuario.idUsuario]);
+            const sql3 = "SELECT nombre FROM instrumentos WHERE idInstrumento = ?";
+            const [results3] = await db.query(sql3, [results2[0].idInstrumento]);
             user = {idUsuario: usuario.idUsuario, nombre: usuario.nombre, email: usuario.email, telefono: usuario.telefono, 
-                rol: usuario.rol, idProvincia: usuario.idProvincia, biografia: usuario.biografia, 
+                rol: usuario.rol, provincia: nombreProvincia, biografia: usuario.biografia, 
                 valoracionMedia: usuario.valoracionMedia, idMusico: results2[0].idMusico, 
-                idInstrumento: results2[0].idInstrumento, 
+                instrumento: results3[0].nombre, 
                 nivelMusical: results2[0].nivelMusical, coche: results2[0].coche};
         }
         else if(usuario.rol === "cliente"){
@@ -210,13 +232,13 @@ app.post("/login", async (req, res) => {
             const [results2] = await db.query(sql2, [usuario.idUsuario]);
             user = {idUsuario: usuario.idUsuario, nombre: usuario.nombre, email: usuario.email, telefono: usuario.telefono, 
                 rol: usuario.rol, biografia: usuario.biografia, 
-                valoracionMedia: usuario.valoracionMedia, idProvincia: usuario.idProvincia, idCliente: results2[0].idCliente};
+                valoracionMedia: usuario.valoracionMedia, provincia: nombreProvincia, idCliente: results2[0].idCliente};
         }
         else if(usuario.rol === "charanga"){
             const sql2 = "SELECT * FROM charangas WHERE idCharanga = ?";
             const [results2] = await db.query(sql2, [usuario.idUsuario]);
             user = {idUsuario: usuario.idUsuario, nombre: usuario.nombre, email: usuario.email, telefono: usuario.telefono,
-                rol: usuario.rol, idProvincia: usuario.idProvincia, biografia: usuario.biografia, 
+                rol: usuario.rol, provincia: nombreProvincia, biografia: usuario.biografia, 
                 valoracionMedia: usuario.valoracionMedia, idCharanga: results2[0].idCharanga,
                 fundacion: results2[0].fundacion};
         }
@@ -355,7 +377,7 @@ app.get("/anuncios_charangas", async (req, res) => {
 
     let sql = `
         SELECT a.idAnuncio, a.titulo, a.descripcion, a.fechaInicio, a.fechaFin,
-               u.idUsuario, u.nombre, u.valoracionMedia, 
+               u.idUsuario, u.nombre, u.valoracionMedia, u.email, u.telefono, 
                p.nombre AS provincia
         FROM anuncios a
         JOIN anuncios_charangas ac ON a.idAnuncio = ac.idAnuncio
@@ -404,8 +426,8 @@ app.get("/anuncios_musicos", async (req, res) => {
 
     let sql = `
         SELECT a.idAnuncio, a.titulo, a.descripcion, a.fechaInicio, a.fechaFin,
-               u.idUsuario, u.nombre, u.valoracionMedia,
-               p.nombre AS provincia, m.idInstrumento
+               u.idUsuario, u.nombre, u.valoracionMedia, u.email, u.telefono,
+               p.nombre AS provincia, m.idInstrumento, m.nivelMusical, m.coche
         FROM anuncios a
         JOIN anuncios_musicos am ON a.idAnuncio = am.idAnuncio
         JOIN usuarios u ON am.idUsuario = u.idUsuario
@@ -891,7 +913,7 @@ app.get("/actos", async (req, res) => {
 
     let sql = `
         SELECT a.idActo, a.idCharanga, a.titulo, a.descripcion, a.fechaInicio, a.fechaFin, a.tipo, a.musicosBuscados,
-               u.idUsuario, u.nombre, u.valoracionMedia,
+               u.idUsuario, u.nombre, u.valoracionMedia, u.email, u.telefono,
                p.nombre AS provincia,
                i.nombre AS instrumento,
                ai.idInstrumento, ai.cantidad,
@@ -949,6 +971,8 @@ app.get("/actos", async (req, res) => {
                     tipo: row.tipo,
                     idUsuario: row.idUsuario,
                     nombre: row.nombre,
+                    email: row.email,
+                    telefono: row.telefono,
                     valoracionMedia: row.valoracionMedia,
                     provincia: row.provincia,
                     musicosBuscados: row.musicosBuscados,
@@ -1215,10 +1239,36 @@ app.get("/datos_musicos", async (req, res) => {
     }
 );
 
+app.get("/datos_musico", async (req, res) => {
+    const {idMusico, idActo} = req.query;
+
+
+
+    //devuelve los datos de los musicos que estan en el array de idMusicos
+
+    const sql = `
+        SELECT m.idMusico,
+               mc.valoracionCharanga, mc.valoracionMusico
+        FROM usuarios u
+        JOIN musicos m ON u.idUsuario = m.idMusico
+        JOIN musicos_contratados mc ON mc.idMusico = m.idMusico
+        WHERE u.idUsuario = ? and mc.idActo = ?
+    `;
+
+    try {
+        const [rows] = await db.query(sql, [idMusico, idActo]);
+        res.json(rows);
+    } catch (error) {
+        console.error("Error al obtener datos de músico:", error);
+        res.status(500).json({ error: "Error al obtener datos de músico" });
+    }
+
+    }
+);
+
 app.post("/asignar_valoracion_charanga_acto", async (req, res) => {
     const { idActo, idCharanga, idMusico, valoracion, tipoActo } = req.body;
 
-    console.log("Parametros recibidos:", idActo, idCharanga, idMusico, valoracion, tipoActo);
 
     const sql = 'UPDATE musicos_contratados SET valoracionCharanga = ? WHERE idActo = ? AND idMusico = ?';
     const sql2 = 'UPDATE solicitudes_musicos SET estado = ? WHERE idActo = ? AND idMusico = ?';

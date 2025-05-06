@@ -160,9 +160,9 @@
                 {{ act.fechaInicio | date:'dd/MM/yyyy' }} - {{ act.fechaFin | date:'dd/MM/yyyy' }}
                 </p>
                 <p class="card-text"><strong>Provincia:</strong> {{ act.provincia }}</p>
-                <p *ngIf="act.instrumentosBuscados > 0" class="card-text"><strong>Instrumentos buscados:</strong></p>
+                <p *ngIf="act.musicosBuscados > 0" class="card-text"><strong>Instrumentos buscados:</strong></p>
                 <div *ngFor="let musico of act.musicos" class="d-flex justify-content-between">
-                    <p *ngIf="act.instrumentosBuscados > 0" class="card-text"><strong> - </strong>{{ musico.cantidad }} {{ getNombreInstrumento(musico.idInstrumento)  }}</p>
+                    <p *ngIf="act.musicosBuscados > 0" class="card-text"><strong> - </strong>{{ musico.cantidad }} {{ getNombreInstrumento(musico.idInstrumento)  }}</p>
                 </div>
 
                 <div *ngIf="!esAceptada(act.idActo) && comprobarMusicoInstrumento(act)" class="text-end">
@@ -236,9 +236,9 @@
                 {{ act.fechaInicio | date:'dd/MM/yyyy' }} - {{ act.fechaFin | date:'dd/MM/yyyy' }}
                 </p>
                 <p class="card-text"><strong>Provincia:</strong> {{ act.provincia }}</p>
-                <p class="card-text"><strong>Instrumentos buscados:</strong></p>
+                <p *ngIf="act.musicosBuscados > 0" class="card-text"><strong>Instrumentos buscados:</strong></p>
                 <div *ngFor="let musico of act.musicos" class="d-flex justify-content-between">
-                    <p class="card-text"><strong> - </strong>{{ musico.cantidad }} {{ getNombreInstrumento(musico.idInstrumento)  }}</p>
+                    <p *ngIf="act.musicosBuscados > 0"  class="card-text"><strong> - </strong>{{ musico.cantidad }} {{ getNombreInstrumento(musico.idInstrumento)  }}</p>
                 </div>
 
                 <div class="text-end">
@@ -313,7 +313,7 @@
                                     </div>
 
                                     <div *ngIf="musicoContratado.valoracionCharanga != null" class="text-center">
-                                      <p class="mb-0"><strong>Valoración asignada:</strong></p>
+                                      <p class="mb-0"><strong>Valoración asignada a la charanga:</strong></p>
                                       <p>{{ musicoContratado.valoracionCharanga }}</p>
                                     </div>
 

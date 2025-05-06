@@ -64,17 +64,6 @@ export class PerfilComponent implements OnInit {
     );
   }
 
-  getNombreInstrumento(idInstrumento: number): string {
-    const instrumento = this.instrumentos.find(i => i.idInstrumento === idInstrumento);
-    return instrumento ? instrumento.nombre : 'Desconocido';
-  }
-
-
-  getNombreProvincia(idProvincia: number): string {
-    const provincia = this.provincias.find(p => p.idProvincia === idProvincia);
-    return provincia ? provincia.nombre : 'Desconocida';
-  }
-
   // Manejar selección de imagen
   onFileSelected(event: any) {
     const file = event.target.files[0];
