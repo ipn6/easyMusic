@@ -33,9 +33,9 @@
       <div class="mb-3 position-relative">
         <input
           [type]="showPassword ? 'text' : 'password'" class="form-control" placeholder="Contraseña" formControlName="password">
-        <button type="button" class="btn btn-sm btn-outline-secondary position-absolute top-0 end-0 mt-1 me-1"
+        <button type="button" class="btn btn-sm btn-link position-absolute top-0 end-0 mt-1 me-1"
                 (click)="togglePasswordVisibility()">
-          <i class="bi" [ngClass]="showPassword ? 'bi-eye-slash' : 'bi-eye'"></i>
+          <i class="bi" [ngClass]="showPassword ? 'bi-eye-slash-fill' : 'bi-eye-fill'"></i>
         </button>
         <div class="text-danger" *ngIf="registerForm.controls['password'].invalid && registerForm.controls['password'].touched">
           La contraseña debe tener al menos 8 caracteres e incluir una mayúscula y un número.
@@ -50,9 +50,9 @@
           placeholder="Confirmar contraseña"
           formControlName="confirmPassword"
         >
-        <button type="button" class="btn btn-sm btn-outline-secondary position-absolute top-0 end-0 mt-1 me-1"
+        <button type="button" class="btn btn-sm btn-link  position-absolute top-0 end-0 mt-1 me-1"
                 (click)="toggleConfirmPasswordVisibility()">
-          <i class="bi" [ngClass]="showConfirmPassword ? 'bi-eye-slash' : 'bi-eye'"></i>
+          <i class="bi" [ngClass]="showConfirmPassword ? 'bi-eye-slash-fill' : 'bi-eye-fill'"></i>
         </button>
       </div>
       <!-- MENSAJE DE ERROR SI NO COINCIDEN -->

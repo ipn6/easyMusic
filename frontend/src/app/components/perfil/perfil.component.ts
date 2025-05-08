@@ -30,6 +30,7 @@ export class PerfilComponent implements OnInit {
   private apiUrl =  environment.apiUrl;
   fotoSeleccionada: File | null = null;
   fotoUrl: string = ''; // URL de la foto de perfil
+  showPassword = false;
 
 
   constructor(private authService: AuthService, private http: HttpClient, private router: Router) {
@@ -105,6 +106,10 @@ export class PerfilComponent implements OnInit {
     }, error => {
       console.error(' Error al actualizar perfil:', error);
     });
+  }
+
+  togglePasswordVisibility(): void {
+    this.showPassword = !this.showPassword;
   }
 
   

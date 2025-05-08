@@ -72,8 +72,23 @@
           </div>
 
           <div class="mb-3">
-            <label>Nueva Contraseña</label>
-            <input type="password" class="form-control" [(ngModel)]="newPassword" name="password">
+            <label for="password">Nueva Contraseña</label>
+            <div class="position-relative">
+              <input [type]="showPassword ? 'text' : 'password'" 
+                     class="form-control pe-5" 
+                     id="password"
+                     placeholder="Contraseña" 
+                     [(ngModel)]="newPassword" 
+                     name="password" 
+                     required>
+          
+              <button type="button" 
+                      class="btn btn-link position-absolute top-50 end-0 translate-middle-y me-2 p-0 border-0 bg-transparent"
+                      (click)="togglePasswordVisibility()" 
+                      tabindex="-1">
+                <i class="bi" [ngClass]="showPassword ? 'bi-eye-slash-fill' : 'bi-eye-fill'"></i>
+              </button>
+            </div>
           </div>
 
           <button type="submit" class="btn btn-primary w-100">Guardar Cambios</button>

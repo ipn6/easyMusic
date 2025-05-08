@@ -1259,7 +1259,7 @@ app.get("/datos_musico", async (req, res) => {
 
 
 
-    //devuelve los datos de los musicos que estan en el array de idMusicos
+    //devuelve los datos del músico
 
     const sql = `
         SELECT m.idMusico,
