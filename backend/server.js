@@ -160,7 +160,7 @@ app.post("/register", upload.single("foto"), async (req, res) => {
 
         if(rol === "musico") {
             user = { idUsuario: userId, nombre, email, telefono, rol, provincia, valoracionMedia, biografia, 
-                idMusico: userId, instrumento, nivelMusical, coche};
+                idMusico: userId, instrumento, idInstrumento, nivelMusical, coche};
         }else if(rol === "charanga") {
             user = { idUsuario: userId, nombre, email, telefono, rol, provincia, valoracionMedia, biografia,
                 idCharanga: userId, fundacion };
@@ -224,7 +224,7 @@ app.post("/login", async (req, res) => {
             user = {idUsuario: usuario.idUsuario, nombre: usuario.nombre, email: usuario.email, telefono: usuario.telefono, 
                 rol: usuario.rol, provincia: nombreProvincia, biografia: usuario.biografia, 
                 valoracionMedia: usuario.valoracionMedia, idMusico: results2[0].idMusico, 
-                instrumento: results3[0].nombre, 
+                instrumento: results3[0].nombre, idInstrumento: results2[0].idInstrumento, 
                 nivelMusical: results2[0].nivelMusical, coche: results2[0].coche};
         }
         else if(usuario.rol === "cliente"){
@@ -884,14 +884,14 @@ app.get("/valoracionMediaTipoActo", async (req, res) => {
   app.post("/crear_acto", async (req, res) => {
     const { idCharanga, titulo, tipo, descripcion, fechaInicio, fechaFin, idProvincia, musicos} = req.body;
     
-
+    
 
     try {
         const connection = await db.getConnection(); // Obtener una conexión del pool
 
         await connection.beginTransaction();
 
-        const numMusicos = musicos.length;
+       let numMusicos = 0;
 
         // Insertar acto
         const sqlActo = "INSERT INTO actos (idCharanga, idProvincia, tipo, fechaInicio, fechaFin, titulo, descripcion, musicosBuscados) VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
@@ -905,9 +905,14 @@ app.get("/valoracionMediaTipoActo", async (req, res) => {
         
 
         for (const musico of musicos) {
+            numMusicos += musico.cantidad; // Sumar la cantidad de musicos buscados
             const sqlMusicos = "INSERT INTO acto_instrumentos (idActo, idInstrumento, cantidad) VALUES (?, ?, ?)";
             await connection.query(sqlMusicos, [idActo, musico.idInstrumento, musico.cantidad]);
         }
+
+        // Actualizar el número de musicos buscados en la tabla actos
+        const sqlUpdateActo = "UPDATE actos SET musicosBuscados = ? WHERE idActo = ?";
+        await connection.query(sqlUpdateActo, [numMusicos, idActo]);
 
         await connection.commit();
         connection.release(); // Liberar conexión
@@ -930,7 +935,7 @@ app.get("/actos", async (req, res) => {
         SELECT a.idActo, a.idCharanga, a.titulo, a.descripcion, a.fechaInicio, a.fechaFin, a.tipo, a.musicosBuscados,
                u.idUsuario, u.nombre, u.valoracionMedia, u.email, u.telefono,
                p.nombre AS provincia,
-               i.nombre AS instrumento,
+               i.nombre AS instrumento, i.idInstrumento AS idInstrumento,
                ai.idInstrumento, ai.cantidad,
                mc.idMusico AS musicoContratado, mc.valoracionCharanga, mc.valoracionMusico
         FROM actos a
