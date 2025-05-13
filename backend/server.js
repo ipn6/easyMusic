@@ -24,10 +24,10 @@ const upload = multer({
 
 // Configurar conexión a MySQL
 const db = mysql.createPool({
-    host: "easymusicserver.mysql.database.azure.com",
-    user: "ismaponce7",
-    password: "easymusic_7", 
-    database: "easymusic",
+    host: DB_HOST,
+    user: DB_USER,
+    password: DB_PASSWORD, 
+    database: DB_NAME,
     port: 3306,                                  
     ssl: {
         rejectUnauthorized: true 
@@ -53,8 +53,8 @@ testDB();
 const transporter = nodemailer.createTransport({
     service: 'gmail',
     auth: {
-      user: 'ipn6@gcloud.ua.es',         // Tu correo
-      pass: 'xdka tham sbdw clif'        
+      user: EMAIL_USER,        
+      pass: EMAIL_PASS       
     }
   });
 

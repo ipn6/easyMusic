@@ -117,7 +117,7 @@ export class ActosComponent {
     this.http.get<any[]>(`${this.apiUrl}/datos_musicos`, { params: { idMusicos, idActo } }).subscribe(
       (data) => {
         this.musicosContratados = data;
-        // inicializa a null los campos valoracionMusico2 y valoracionCharanga2 de cada musicoContratado
+        // inicializa a 1 los campos valoracionMusico2 y valoracionCharanga2 de cada musicoContratado
         this.musicosContratados.forEach(musico => {
           musico.valoracionMusico2 = 1;
           musico.valoracionCharanga2 = 1;
