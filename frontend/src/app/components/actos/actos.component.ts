@@ -123,7 +123,6 @@ export class ActosComponent {
           musico.valoracionCharanga2 = 1;
         });
         
-        console.log("Datos de los músicos:", this.musicosContratados);
         
       },
       (error) => console.error("Error al obtener datos del músico:", error)
@@ -138,7 +137,6 @@ export class ActosComponent {
         this.musicoContratado.valoracionMusico2 = 1;
         this.musicoContratado.valoracionCharanga2 = 1;
         
-        console.log("Datos del músico:", this.musicoContratado);
         
       },
       (error) => console.error("Error al obtener datos del músico:", error)
@@ -179,11 +177,10 @@ export class ActosComponent {
     }
     this.http.get<any[]>(`${this.apiUrl}/actos`, { params }).subscribe(
       (data) => {
-        console.log("Actos recibidos después de aplicar filtro:", data);
+
         this.actosFiltrados = data;
         this.actosUsuario = data.filter(acto => acto.idUsuario === this.user.idUsuario);
-        console.log("Ãctos filtradas:", this.actosFiltrados);
-        console.log("Actos del usuario:", this.actosUsuario);
+
       },
       (error) => {
         console.error("Error al obtener ofertas:", error);
@@ -202,7 +199,6 @@ export class ActosComponent {
 
   crearActo() {
     const actoData = { ...this.acto, idCharanga: this.user.idUsuario };
-    console.log("Datos del acto a crear:", actoData);
     this.http.post(`${this.apiUrl}/crear_acto`, actoData).subscribe(() => {
       this.obtenerActos();
       this.acto = { titulo: '', descripcion: '',  idCharanga:'', idProvincia: '', fechaInicio: '', 
@@ -216,7 +212,6 @@ export class ActosComponent {
     this.http.get<any[]>(`${this.apiUrl}/solicitudes_musico`, { params: { idMusico } }).subscribe(
       (data) => {
         this.solicitudesUser = data;
-        console.log("Solicitudes del usuario:", this.solicitudesUser);
       },
       (error) => 
         console.error("Error al obtener solicitudes:", error)

@@ -56,7 +56,6 @@ export class CharangasComponent {
       }
       this.http.get<any[]>(`${this.apiUrl}/anuncios_charangas`, { params }).subscribe(
         (data) => {
-          console.log("Anuncios recibidos después de aplicar filtro:", data);
           this.anunciosFiltrados = data;
         },
         (error) => {

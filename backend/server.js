@@ -39,17 +39,6 @@ const db = mysql.createPool({
 
 
 
-async function testDB() {
-    try {
-        const [rows] = await db.query("SELECT 1");
-        console.log("Conexión a la base de datos exitosa",);
-    } catch (error) {
-        console.error("Error en la conexión a la base de datos:", error);
-    }
-}
-
-testDB();
-
 const transporter = nodemailer.createTransport({
     service: 'gmail',
     auth: {
@@ -60,7 +49,7 @@ const transporter = nodemailer.createTransport({
 
 async function sendEmail(to, subject, text) {
     const mailOptions = {
-        from: 'ipn6@gcloud.ua.es',
+        from: process.env.EMAIL_USER,
         to: to,
         subject: subject,
         html: `

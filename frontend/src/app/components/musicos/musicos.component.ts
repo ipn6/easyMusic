@@ -68,7 +68,6 @@ export class MusicosComponent {
     }
     this.http.get<any[]>(`${this.apiUrl}/anuncios_musicos`, { params }).subscribe(
       (data) => {
-        console.log("Anuncios recibidos después de aplicar filtro:", data);
         this.anunciosFiltrados = data;
       },
       (error) => {
